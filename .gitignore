@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.jsonl
+ledger/positions/positions.json
+data/cache/
+data/raw/
+data/processed/
+dist/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
