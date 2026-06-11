@@ -1,0 +1,15 @@
+{
+  "default_timeframe": "12 months",
+  "tickers": [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "GOOGL",
+    "META",
+    "AMZN",
+    "TSLA",
+    "JPM",
+    "V",
+    "BRK-B"
+  ]
+}

@@ -1,15 +1,27 @@
 import json
-from pathlib import Path
 from dataclasses import dataclass, asdict
+from pathlib import Path
+
+# Fields added to Position over time — kept as defaults so old JSON
+# records that predate them still deserialise correctly.
+_POSITION_DEFAULTS = {
+    "target_notional": 0.0,   # $ allocation at open (from sizing rule)
+    "size_pct": 0.0,           # fraction of portfolio at open (0.03 = 3%)
+    "size_tier": "",           # human label, e.g. "3% tier"
+}
 
 
 @dataclass
 class Position:
     ticker: str
     shares: float
-    avg_cost: float
-    opened_at: str
-    status: str = "open"  # "open" | "closed"
+    avg_cost: float             # price per share at open
+    opened_at: str              # ISO-8601 timestamp
+    status: str = "open"        # "open" | "closed"
+    closed_at: str = ""         # ISO-8601 timestamp; empty when still open
+    target_notional: float = 0.0  # $ amount allocated by the sizing rule at open
+    size_pct: float = 0.0         # fraction of portfolio used (0.03 = 3%)
+    size_tier: str = ""           # tier label, e.g. "3% tier"
 
 
 class PositionStore:
@@ -23,7 +35,11 @@ class PositionStore:
             return {}
         with self.path.open() as f:
             raw = json.load(f)
-        return {k: Position(**v) for k, v in raw.items()}
+        # Merge defaults so old records without the sizing fields still work.
+        return {
+            k: Position(**{**_POSITION_DEFAULTS, **v})
+            for k, v in raw.items()
+        }
 
     def _save(self) -> None:
         with self.path.open("w") as f:
@@ -32,6 +48,15 @@ class PositionStore:
     def upsert(self, position: Position) -> None:
         self._positions[position.ticker] = position
         self._save()
+
+    def close(self, ticker: str, closed_at: str) -> Position | None:
+        pos = self._positions.get(ticker)
+        if pos is None or pos.status != "open":
+            return None
+        pos.status = "closed"
+        pos.closed_at = closed_at
+        self._save()
+        return pos
 
     def get(self, ticker: str) -> Position | None:
         return self._positions.get(ticker)

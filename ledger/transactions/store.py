@@ -1,18 +1,18 @@
 import json
-from pathlib import Path
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from pathlib import Path
 
 
 @dataclass
 class Transaction:
     id: str
     ticker: str
-    action: str       # "buy" | "sell"
+    action: str         # "buy" | "sell"
     shares: float
     price: float
-    timestamp: str
-    decision_ref: str = ""
+    timestamp: str      # ISO-8601
+    decision_ref: str = ""   # timestamp of the CommitteeResult that triggered this
+    notes: str = ""          # human-readable reasoning (threshold met, signal, confidence)
 
 
 class TransactionStore:
