@@ -11,3 +11,4 @@ dist/
 *.egg-info/
 .mypy_cache/
 .ruff_cache/
+.claude/
