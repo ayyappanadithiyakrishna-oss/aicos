@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from agents.base import AgentContext
 from config.settings import Settings
 from ledger.decisions.store import DecisionStore
+from ledger.pending.store import PendingStore
 from ledger.positions.store import Position, PositionStore
 from ledger.transactions.store import Transaction, TransactionStore
 from orchestrator.committee.session import CommitteeResult, CommitteeSession
@@ -41,6 +42,7 @@ class InvestmentReviewWorkflow:
         transaction_store: TransactionStore,
         settings: Settings | None = None,
         fetcher: "DataFetcher | None" = None,
+        pending_store: PendingStore | None = None,
     ):
         self.session = session
         self.decision_store = decision_store
@@ -49,6 +51,7 @@ class InvestmentReviewWorkflow:
         self.settings = settings or Settings()
         self._sizer = PositionSizer()
         self._fetcher = fetcher  # when set, auto-populates AgentContext from the pipeline
+        self._pending_store = pending_store  # when set, actionable decisions queue instead of auto-execute
 
     def run(
         self,
@@ -79,12 +82,28 @@ class InvestmentReviewWorkflow:
         price = self._extract_price(data)
         action, reasoning, position, tx, size_result = self._evaluate(result, price)
 
-        # ── Persist: decision first (append-only), then position, then tx ───
+        # ── Persist: decision first (append-only), then position/tx or pending ──
         self.decision_store.record(
             result,
             ledger_action=action,
             ledger_reasoning=reasoning,
         )
+        if action == "pending" and self._pending_store is not None and size_result is not None:
+            from ledger.pending.store import PendingStore
+            pending_action = "buy" if result.final_signal in {"buy"} else "sell"
+            self._pending_store.add(
+                PendingStore.make(
+                    decision_ref=result.timestamp.isoformat(),
+                    ticker=result.ticker,
+                    signal=result.final_signal,
+                    confidence=result.confidence,
+                    proposed_action=pending_action,
+                    proposed_price=price or 0.0,
+                    proposed_shares=size_result.shares,
+                    proposed_notional=size_result.notional,
+                    size_tier=size_result.tier_label,
+                )
+            )
         if position is not None:
             self.position_store.upsert(position)
         if tx is not None:
@@ -151,6 +170,16 @@ class InvestmentReviewWorkflow:
                 confidence, price, portfolio_value, self.settings.portfolio
             )
 
+            # ── Route to pending queue if human-in-the-loop mode is active ──
+            if self._pending_store is not None:
+                reasoning = (
+                    f"PENDING — confidence {confidence:.1%} ≥ threshold {threshold:.1%}. "
+                    f"Signal {signal.upper()}. "
+                    f"Queued {size.shares:.4f} shares of {ticker} @ ${price:.2f} "
+                    f"(${size.notional:,.2f} notional, {size.tier_label}) for human review."
+                )
+                return "pending", reasoning, None, None, size
+
             position = Position(
                 ticker=ticker,
                 shares=size.shares,
@@ -201,6 +230,24 @@ class InvestmentReviewWorkflow:
                     f"Cannot close position without a price."
                 )
                 return "passed", reasoning, None, None, None
+
+            # ── Route exit to pending queue when human-in-the-loop is active ─
+            if self._pending_store is not None:
+                pnl_est = (price - existing.avg_cost) * existing.shares
+                size_est = SizeResult(
+                    shares=existing.shares,
+                    notional=existing.shares * price,
+                    pct_of_portfolio=existing.size_pct,
+                    tier_label=existing.size_tier,
+                    reasoning=f"Close {existing.shares:.4f} shares @ ${price:.2f}, est. P&L ${pnl_est:+.2f}",
+                )
+                reasoning = (
+                    f"PENDING — confidence {confidence:.1%} ≥ threshold {threshold:.1%}. "
+                    f"Signal {signal.upper()}. "
+                    f"Queued closure of {existing.shares:.4f} shares of {ticker} @ ${price:.2f} "
+                    f"(est. P&L ${pnl_est:+.2f}) for human review."
+                )
+                return "pending", reasoning, None, None, size_est
 
             # Close the position in-place (PositionStore.close mutates + saves)
             closed = self.position_store.close(ticker, ts)

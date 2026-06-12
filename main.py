@@ -12,9 +12,13 @@ import argparse
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from config.settings import Settings
 from data.fetcher import DataFetcher
 from ledger.decisions.store import DecisionStore
+from ledger.pending.store import PendingStore
 from ledger.positions.store import PositionStore
 from ledger.transactions.store import TransactionStore
 from orchestrator.committee.session import CommitteeSession
@@ -53,6 +57,7 @@ def build_workflow(settings: Settings) -> tuple[InvestmentReviewWorkflow, Positi
     decision_store = DecisionStore(base / "decisions" / "history.jsonl")
     position_store = PositionStore(base / "positions" / "positions.json")
     transaction_store = TransactionStore(base / "transactions" / "transactions.jsonl")
+    pending_store = PendingStore(base / "pending" / "pending.json")
     fetcher = DataFetcher()
 
     committee = build_committee()
@@ -64,6 +69,7 @@ def build_workflow(settings: Settings) -> tuple[InvestmentReviewWorkflow, Positi
         transaction_store=transaction_store,
         settings=settings,
         fetcher=fetcher,
+        pending_store=pending_store,
     )
     return workflow, position_store, fetcher
 
