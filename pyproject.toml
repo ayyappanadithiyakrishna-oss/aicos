@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "AI Investment Committee OS — multi-agent investment decision system"
 requires-python = ">=3.11"
 dependencies = [
+    "alpaca-py>=0.30",
     "anthropic>=0.30",
     "edgartools>=5.0",
     "flask>=3.0",
