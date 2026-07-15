@@ -1,0 +1,2274 @@
+{
+  "generated_at": "2026-07-15T15:30:26.997876+00:00",
+  "filters": {
+    "country": "United States",
+    "mics": [
+      "XNYS",
+      "XNAS"
+    ],
+    "market_cap_floor": "Mid Cap",
+    "market_cap_tiers": [
+      "Mid Cap",
+      "Large Cap",
+      "Mega Cap"
+    ],
+    "sector_allowlist": [],
+    "sector_denylist": [],
+    "exclude_delisted": true,
+    "max_candidates": 250
+  },
+  "count": 250,
+  "truncated": true,
+  "candidates": [
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "sector": "Information Technology",
+      "industry": "Electronic Equipment, Instruments & Components",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ABBV",
+      "name": "AbbVie Inc.",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ABT",
+      "name": "Abbott Laboratories",
+      "sector": "Health Care",
+      "industry": "Health Care Technology",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AMAT",
+      "name": "Applied Materials, Inc.",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AMD",
+      "name": "Advanced Micro Devices, Inc.",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AMGN",
+      "name": "Amgen Inc.",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AMZN",
+      "name": "Amazon.com, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Internet & Direct Marketing Retail",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AVGO",
+      "name": "Broadcom Inc.",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AXP",
+      "name": "American Express Company",
+      "sector": "Financials",
+      "industry": "Consumer Finance",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BAC",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BAC-PA",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BAC-PB",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BAC-PE",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BAC-PK",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BAC-PL",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BML-PG",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BML-PH",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BML-PJ",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BML-PL",
+      "name": "Bank of America Corporation",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BRK-A",
+      "name": "Berkshire Hathaway Inc.",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BRK-B",
+      "name": "Berkshire Hathaway Inc.",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CAT",
+      "name": "Caterpillar Inc.",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "COST",
+      "name": "Costco Wholesale Corporation",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CSCO",
+      "name": "Cisco Systems, Inc.",
+      "sector": "Information Technology",
+      "industry": "Communications Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CVX",
+      "name": "Chevron Corporation",
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "GE",
+      "name": "General Electric Company",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "GEV",
+      "name": "GE Vernova Inc. Common Stock",
+      "sector": "Energy",
+      "industry": "",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "GOOG",
+      "name": "Alphabet Inc.",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Alphabet Inc.",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "GOOGM",
+      "name": "Alphabet Inc. Depositary Shares representing a 1/20th Interest in a Share of Series A Mandatory Convertible Preferred Stock",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "GOOGN",
+      "name": "Alphabet Inc. Depositary Shares representing a 1/20th Interest in a Share of Series B Mandatory Convertible Preferred Stock",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "GS",
+      "name": "The Goldman Sachs Group, Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "HD",
+      "name": "Home Depot, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Household Durables",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "IBM",
+      "name": "International Business Machines Corporation",
+      "sector": "Information Technology",
+      "industry": "IT Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "INTC",
+      "name": "Intel Corporation",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "JNJ",
+      "name": "Johnson & Johnson",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "JPM",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "JPM-PC",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "JPM-PD",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "JPM-PG",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "JPM-PH",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "JPM-PJ",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "JPM-PK",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "KO",
+      "name": "Coca-Cola Company",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "LLY",
+      "name": "Eli Lilly and Company",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "LRCX",
+      "name": "Lam Research Corporation",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "MA",
+      "name": "Mastercard Incorporated Class A",
+      "sector": "Financials",
+      "industry": "Consumer Finance",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "MCD",
+      "name": "McDonald's Corporation",
+      "sector": "Consumer Discretionary",
+      "industry": "Hotels, Restaurants & Leisure",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "META",
+      "name": "Meta Platforms Inc Class A",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "MRK",
+      "name": "Merck & Co., Inc.",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "MS",
+      "name": "Morgan Stanley",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft Corporation",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "MU",
+      "name": "Micron Technology, Inc.",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "NFLX",
+      "name": "Netflix, Inc.",
+      "sector": "Communication Services",
+      "industry": "Entertainment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "NVDA",
+      "name": "NVIDIA Corporation",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ORCL",
+      "name": "Oracle Corporation",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "PEP",
+      "name": "PepsiCo, Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "PG",
+      "name": "The Procter & Gamble Company",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "PLTR",
+      "name": "Palantir Technologies Inc. Class A",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "PM",
+      "name": "Philip Morris International Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Tobacco",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "RTX",
+      "name": "Raytheon Technologies Corporation",
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "SPCX",
+      "name": "Space Exploration Technologies Corp. Class A Common Stock",
+      "sector": "",
+      "industry": "",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "TMUS",
+      "name": "T-Mobile US, Inc.",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Tesla, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Automobiles",
+      "market_cap": "Mega Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "UNH",
+      "name": "UnitedHealth Group Incorporated",
+      "sector": "Health Care",
+      "industry": "Health Care Providers & Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "V",
+      "name": "Visa Inc.",
+      "sector": "Financials",
+      "industry": "Consumer Finance",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "VZ",
+      "name": "Verizon Communications Inc.",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "WFC",
+      "name": "Wells Fargo & Company",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "WFC-PA",
+      "name": "Wells Fargo & Company",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "WFC-PL",
+      "name": "Wells Fargo & Company",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "WFC-PY",
+      "name": "Wells Fargo & Company",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "WFC-PZ",
+      "name": "Wells Fargo & Company",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "WMT",
+      "name": "Walmart Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "XOM",
+      "name": "Exxon Mobil Corporation",
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "market_cap": "Mega Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "A",
+      "name": "Agilent Technologies, Inc.",
+      "sector": "Health Care",
+      "industry": "Biotechnology",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AA",
+      "name": "Alcoa Corporation",
+      "sector": "Materials",
+      "industry": "Metals & Mining",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ABNB",
+      "name": "Airbnb, Inc. Class A",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ACM",
+      "name": "AECOM",
+      "sector": "Industrials",
+      "industry": "Construction & Engineering",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ADBE",
+      "name": "Adobe Inc.",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ADI",
+      "name": "Analog Devices, Inc.",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ADM",
+      "name": "Archer-Daniels-Midland Company",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ADP",
+      "name": "Automatic Data Processing, Inc.",
+      "sector": "Industrials",
+      "industry": "Professional Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ADSK",
+      "name": "Autodesk, Inc.",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AEE",
+      "name": "Ameren Corporation",
+      "sector": "Utilities",
+      "industry": "Electric Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AEIS",
+      "name": "Advanced Energy Industries, Inc.",
+      "sector": "Industrials",
+      "industry": "Electrical Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AEP",
+      "name": "American Electric Power Company, Inc.",
+      "sector": "Utilities",
+      "industry": "Electric Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AES",
+      "name": "The AES Corporation",
+      "sector": "Utilities",
+      "industry": "Multi-Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AFG",
+      "name": "American Financial Group, Inc.",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AFL",
+      "name": "Aflac Incorporated",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AFRM",
+      "name": "Affirm Holdings, Inc.",
+      "sector": "Information Technology",
+      "industry": "IT Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AGNC",
+      "name": "AGNC Investment Corp.",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AGNCL",
+      "name": "AGNC Investment Corp. Depositary Shares Each Representing a 1/1000th Interest in a Share of 7.75% Series G Fixed-Rate Reset Cumulative Redeemable Preferred Stock",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AGNCM",
+      "name": "AGNC Investment Corp.",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AGNCN",
+      "name": "AGNC Investment Corp.",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AGNCO",
+      "name": "AGNC Investment Corp.",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AGNCP",
+      "name": "AGNC Investment Corp.",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AGNCZ",
+      "name": "AGNC Investment Corp. Depositary Shares Each Representing a 1/1000th Interest in a Share of 8.75% Series H Fixed-Rate Cumulative Redeemable Preferred Stock",
+      "sector": "",
+      "industry": "",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AIG",
+      "name": "American International Group, Inc.",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AIT",
+      "name": "Applied Industrial Technologies, Inc.",
+      "sector": "Industrials",
+      "industry": "Trading Companies & Distributors",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AIZ",
+      "name": "Assurant, Inc.",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AJG",
+      "name": "Arthur J. Gallagher & Co.",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AKAM",
+      "name": "Akamai Technologies, Inc.",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ALAB",
+      "name": "Astera Labs Inc. Common Stock",
+      "sector": "Information Technology",
+      "industry": "",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ALB",
+      "name": "Albemarle Corporation",
+      "sector": "Materials",
+      "industry": "Chemicals",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ALGN",
+      "name": "Align Technology, Inc.",
+      "sector": "Health Care",
+      "industry": "Health Care Technology",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ALL",
+      "name": "The Allstate Corporation",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ALL-PB",
+      "name": "The Allstate Corporation",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ALL-PH",
+      "name": "The Allstate Corporation",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ALL-PI",
+      "name": "The Allstate Corporation",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ALLY",
+      "name": "Ally Financial Inc.",
+      "sector": "Financials",
+      "industry": "Consumer Finance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ALNY",
+      "name": "Alnylam Pharmaceuticals, Inc.",
+      "sector": "Health Care",
+      "industry": "Biotechnology",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ALSN",
+      "name": "Allison Transmission Holdings, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Auto Components",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AM",
+      "name": "Antero Midstream Corporation",
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AME",
+      "name": "AMETEK, Inc.",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AMH",
+      "name": "American Homes 4 Rent",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AMKR",
+      "name": "Amkor Technology, Inc.",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AMP",
+      "name": "Ameriprise Financial, Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AMRZ",
+      "name": "Amrize Ltd Ordinary Shares",
+      "sector": "Materials",
+      "industry": "Construction Materials",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AMT",
+      "name": "American Tower Corporation",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ANET",
+      "name": "Arista Networks, Inc.",
+      "sector": "Financials",
+      "industry": "Diversified Financial Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AOS",
+      "name": "A.O. Smith Corporation",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "APA",
+      "name": "APA Corporation",
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "APD",
+      "name": "Air Products and Chemicals, Inc.",
+      "sector": "Materials",
+      "industry": "Chemicals",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "APG",
+      "name": "APi Group Corporation",
+      "sector": "Industrials",
+      "industry": "Construction & Engineering",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "APH",
+      "name": "Amphenol Corporation Class A",
+      "sector": "Information Technology",
+      "industry": "Electronic Equipment, Instruments & Components",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "APO",
+      "name": "Apollo Global Management, Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "APO-PA",
+      "name": "Apollo Global Management, Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "APP",
+      "name": "AppLovin Corp. Class A",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AR",
+      "name": "Antero Resources Corporation",
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ARCC",
+      "name": "Ares Capital Corporation",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ARES",
+      "name": "Ares Management Corporation",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ARMK",
+      "name": "Aramark",
+      "sector": "Consumer Discretionary",
+      "industry": "Hotels, Restaurants & Leisure",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ARXS",
+      "name": "Arxis Inc. Class A Common Stock",
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ASTS",
+      "name": "AST SpaceMobile, Inc.",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "ATI",
+      "name": "Allegheny Technologies Incorporated",
+      "sector": "Industrials",
+      "industry": "Building Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "ATO",
+      "name": "Atmos Energy Corporation",
+      "sector": "Utilities",
+      "industry": "Gas Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AVAV",
+      "name": "AeroVironment, Inc.",
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "AVB",
+      "name": "AvalonBay Communities, Inc.",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AVTR-PA",
+      "name": "Avantor, Inc.",
+      "sector": "Materials",
+      "industry": "Chemicals",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AVY",
+      "name": "Avery Dennison Corporation",
+      "sector": "Industrials",
+      "industry": "Commercial Services & Supplies",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AWK",
+      "name": "American Water Works Company, Inc.",
+      "sector": "Utilities",
+      "industry": "Water Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "AXON",
+      "name": "Axon Enterprise Inc",
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "B",
+      "name": "Barnes Group Inc.",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BA",
+      "name": "Boeing Company (The)",
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BALL",
+      "name": "Ball Corporation Common Stock",
+      "sector": "Consumer Discretionary",
+      "industry": "Distributors",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BAX",
+      "name": "Baxter International Inc.",
+      "sector": "Health Care",
+      "industry": "Health Care Equipment & Supplies",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BBIO",
+      "name": "BridgeBio Pharma, Inc.",
+      "sector": "Health Care",
+      "industry": "Biotechnology",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BBY",
+      "name": "Best Buy Co., Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Specialty Retail",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BDX",
+      "name": "Becton, Dickinson and Company",
+      "sector": "Health Care",
+      "industry": "Health Care Equipment & Supplies",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BE",
+      "name": "Bloom Energy Corporation",
+      "sector": "Industrials",
+      "industry": "Electrical Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BEN",
+      "name": "Franklin Resources, Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BEPC",
+      "name": "Brookfield Renewable Corporation",
+      "sector": "Utilities",
+      "industry": "Independent Power and Renewable Electricity Producers",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BF-A",
+      "name": "Brown-Forman Corporation",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BF-B",
+      "name": "Brown-Forman Corporation",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BG",
+      "name": "Bunge Limited",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BIIB",
+      "name": "Biogen Inc.",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BJ",
+      "name": "BJ's Wholesale Club Holdings, Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BK",
+      "name": "The Bank of New York Mellon Corporation",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BKNG",
+      "name": "Booking Holdings Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Hotels, Restaurants & Leisure",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BKR",
+      "name": "Baker Hughes Company Class A",
+      "sector": "Energy",
+      "industry": "Energy Equipment & Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BLD",
+      "name": "TopBuild Corp.",
+      "sector": "Industrials",
+      "industry": "Construction & Engineering",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BLDR",
+      "name": "Builders FirstSource, Inc.",
+      "sector": "Industrials",
+      "industry": "Building Products",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BLK",
+      "name": "BlackRock, Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BMRN",
+      "name": "BioMarin Pharmaceutical Inc.",
+      "sector": "Health Care",
+      "industry": "Biotechnology",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BMY",
+      "name": "Bristol-Myers Squibb Company",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BR",
+      "name": "Broadridge Financial Solutions, Inc.",
+      "sector": "Information Technology",
+      "industry": "IT Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BRKRP",
+      "name": "Bruker Corporation 6.375% Mandatory Convertible Preferred Stock Series A",
+      "sector": "Health Care",
+      "industry": "Biotechnology",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BRO",
+      "name": "Brown & Brown, Inc.",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BSX",
+      "name": "Boston Scientific Corporation",
+      "sector": "Health Care",
+      "industry": "",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BSY",
+      "name": "Bentley Systems, Incorporated Class B",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BTSGU",
+      "name": "BrightSpring Health Services Inc. Tangible Equity Unit",
+      "sector": "Health Care",
+      "industry": "",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "BURL",
+      "name": "Burlington Stores, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Textiles, Apparel & Luxury Goods",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BWA",
+      "name": "BorgWarner Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Auto Components",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "BWXT",
+      "name": "BWX Technologies, Inc.",
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "C",
+      "name": "Citigroup Inc.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CACI",
+      "name": "CACI International Inc",
+      "sector": "Information Technology",
+      "industry": "IT Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CAH",
+      "name": "Cardinal Health, Inc.",
+      "sector": "Health Care",
+      "industry": "Health Care Providers & Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CARR",
+      "name": "Carrier Global Corp.",
+      "sector": "Industrials",
+      "industry": "Building Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CASY",
+      "name": "Casey's General Stores, Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Food & Staples Retailing",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CBRE",
+      "name": "CBRE Group, Inc. Class A",
+      "sector": "Real Estate",
+      "industry": "Real Estate Management & Development",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CBRS",
+      "name": "Cerebras Systems Inc. Class A Common Stock",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CCI",
+      "name": "Crown Castle Inc.",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CCK",
+      "name": "Crown Holdings, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Distributors",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CCL",
+      "name": "Carnival Corporation & plc",
+      "sector": "Consumer Discretionary",
+      "industry": "Hotels, Restaurants & Leisure",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CDE",
+      "name": "Coeur Mining, Inc.",
+      "sector": "Materials",
+      "industry": "Metals & Mining",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CDNS",
+      "name": "Cadence Design Systems, Inc.",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CDW",
+      "name": "CDW Corporation",
+      "sector": "Information Technology",
+      "industry": "IT Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CEG",
+      "name": "Constellation Energy Corporation Common Stock",
+      "sector": "Utilities",
+      "industry": "Electric Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CELG-RI",
+      "name": "Bristol-Myers Squibb Company",
+      "sector": "Health Care",
+      "industry": "Pharmaceuticals",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CELH",
+      "name": "Celsius Holdings, Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CERN",
+      "name": "Cerner Corporation",
+      "sector": "Health Care",
+      "industry": "Health Care Providers & Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CET",
+      "name": "Central Securities Corp.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CF",
+      "name": "IES Holdings, Inc.",
+      "sector": "Industrials",
+      "industry": "Construction & Engineering",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CFG",
+      "name": "Citizens Financial Group, Inc.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CFG-PE",
+      "name": "Citizens Financial Group, Inc.",
+      "sector": "Financials",
+      "industry": "Banks",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CG",
+      "name": "The Carlyle Group Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CHD",
+      "name": "Church & Dwight Co., Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CHRW",
+      "name": "C.H. Robinson Worldwide, Inc.",
+      "sector": "Industrials",
+      "industry": "Air Freight & Logistics",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CHTR",
+      "name": "Charter Communications, Inc. Class A",
+      "sector": "Communication Services",
+      "industry": "Entertainment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CHWY",
+      "name": "Chewy, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Internet & Direct Marketing Retail",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CI",
+      "name": "Cigna Corporation",
+      "sector": "Health Care",
+      "industry": "Health Care Providers & Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CIEN",
+      "name": "Ciena Corporation",
+      "sector": "Information Technology",
+      "industry": "Communications Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CINF",
+      "name": "Cincinnati Financial Corporation",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CL",
+      "name": "Colgate-Palmolive Company",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CLH",
+      "name": "Clean Harbors, Inc.",
+      "sector": "Industrials",
+      "industry": "Transportation Infrastructure",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CLX",
+      "name": "The Clorox Company",
+      "sector": "Consumer Staples",
+      "industry": "Household Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CMCSA",
+      "name": "Comcast Corporation",
+      "sector": "Communication Services",
+      "industry": "Entertainment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CME",
+      "name": "CME Group Inc.",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CMG",
+      "name": "Chipotle Mexican Grill, Inc.",
+      "sector": "Consumer Discretionary",
+      "industry": "Hotels, Restaurants & Leisure",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CMI",
+      "name": "Cummins Inc.",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CMS",
+      "name": "CMS Energy Corporation",
+      "sector": "Utilities",
+      "industry": "Electric Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CNA",
+      "name": "CNA Financial Corporation",
+      "sector": "Financials",
+      "industry": "Insurance",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CNC",
+      "name": "Centene Corporation",
+      "sector": "Health Care",
+      "industry": "Health Care Providers & Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CNM",
+      "name": "Core & Main Inc. Class A Common Stock",
+      "sector": "Information Technology",
+      "industry": "Electronic Equipment, Instruments & Components",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CNP",
+      "name": "CenterPoint Energy, Inc.",
+      "sector": "Utilities",
+      "industry": "Electric Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "COHR",
+      "name": "Coherent, Inc.",
+      "sector": "Information Technology",
+      "industry": "Electronic Equipment, Instruments & Components",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "COIN",
+      "name": "Coinbase Global, Inc. Class A",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "COKE",
+      "name": "Coca-Cola Consolidated, Inc.",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "COO",
+      "name": "The Cooper Companies, Inc.",
+      "sector": "Health Care",
+      "industry": "Health Care Equipment & Supplies",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "COP",
+      "name": "ConocoPhillips",
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "COR",
+      "name": "CoreSite Realty Corporation",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CPAY",
+      "name": "Corpay Inc. Common Stock",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CPRT",
+      "name": "Copart, Inc.",
+      "sector": "Industrials",
+      "industry": "Professional Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CPT",
+      "name": "Camden Property Trust",
+      "sector": "Real Estate",
+      "industry": "Equity Real Estate Investment Trusts (REITs)",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CQP",
+      "name": "Cheniere Energy Partners, L.P.",
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CR",
+      "name": "Crane Co.",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CRBG",
+      "name": "Corebridge Financial Inc. Common Stock",
+      "sector": "Financials",
+      "industry": "Capital Markets",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CRDO",
+      "name": "Credo Technology Group Holding Ltd Ordinary Shares",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CREE",
+      "name": "Cree, Inc.",
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CRH",
+      "name": "RH",
+      "sector": "Consumer Discretionary",
+      "industry": "Specialty Retail",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CRM",
+      "name": "Salesforce, Inc.",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CRS",
+      "name": "Carpenter Technology Corporation",
+      "sector": "Industrials",
+      "industry": "Building Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CRWD",
+      "name": "CrowdStrike Holdings, Inc. Class A",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CRWV",
+      "name": "CoreWeave Inc. Class A Common Stock",
+      "sector": "Information Technology",
+      "industry": "Software",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CSGP",
+      "name": "CoStar Group, Inc.",
+      "sector": "Real Estate",
+      "industry": "Real Estate Management & Development",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CSL",
+      "name": "Carlisle Companies Incorporated",
+      "sector": "Industrials",
+      "industry": "Building Products",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CSX",
+      "name": "CSX Corporation",
+      "sector": "Industrials",
+      "industry": "Road & Rail",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CTA-PA",
+      "name": "E. I. du Pont de Nemours and Company",
+      "sector": "Materials",
+      "industry": "Construction Materials",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CTA-PB",
+      "name": "E. I. du Pont de Nemours and Company",
+      "sector": "Materials",
+      "industry": "Construction Materials",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CTAS",
+      "name": "Cintas Corporation",
+      "sector": "Industrials",
+      "industry": "Professional Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CTSH",
+      "name": "Cognizant Technology Solutions Corporation Class A",
+      "sector": "Information Technology",
+      "industry": "IT Services",
+      "market_cap": "Large Cap",
+      "exchange": "NMS",
+      "mic": "XNAS"
+    },
+    {
+      "symbol": "CTVA",
+      "name": "Corteva Inc",
+      "sector": "Materials",
+      "industry": "Construction Materials",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CVNA",
+      "name": "Carvana Co.",
+      "sector": "Consumer Discretionary",
+      "industry": "Internet & Direct Marketing Retail",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CVS",
+      "name": "CVS Health Corporation",
+      "sector": "Health Care",
+      "industry": "Health Care Providers & Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "CW",
+      "name": "Curtiss-Wright Corporation",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "D",
+      "name": "Dominion Energy, Inc.",
+      "sector": "Utilities",
+      "industry": "Electric Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "DAL",
+      "name": "Delta Air Lines, Inc.",
+      "sector": "Industrials",
+      "industry": "Airlines",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "DASH",
+      "name": "DoorDash, Inc.",
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "DCI",
+      "name": "Donaldson Company, Inc.",
+      "sector": "Industrials",
+      "industry": "Machinery",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    },
+    {
+      "symbol": "DCUE",
+      "name": "Dominion Energy, Inc.",
+      "sector": "Utilities",
+      "industry": "Electric Utilities",
+      "market_cap": "Large Cap",
+      "exchange": "NYQ",
+      "mic": "XNYS"
+    }
+  ]
+}

@@ -32,12 +32,16 @@ from flask import Flask, Response, redirect, request, url_for
 from benchmarks.metrics.performance import PerformanceTracker
 from benchmarks.strategies.buy_and_hold import BuyAndHoldBenchmark
 from config.settings import Settings
+from ledger.alerts.store import AlertStore
 from ledger.decisions.store import DecisionStore
 from ledger.pending.store import PendingStore
 from ledger.positions.store import Position, PositionStore
 from ledger.transactions.store import Transaction, TransactionStore
 from orchestrator.execution.alpaca_client import AlpacaPaperClient, AlpacaConfigError
 from orchestrator.sizing.sizer import PositionSizer
+from orchestrator.scheduling.market_hours import market_status
+from orchestrator.workflows.alerts import AlertMonitor
+from orchestrator.workflows.universe_scanner import UniverseScanner
 from markupsafe import escape
 
 app = Flask(__name__)
@@ -47,6 +51,7 @@ _DECISIONS   = DecisionStore()
 _POSITIONS   = PositionStore()
 _TXS         = TransactionStore()
 _PENDING     = PendingStore()
+_ALERTS      = AlertStore()
 _SIZER       = PositionSizer()
 
 _ALPACA: AlpacaPaperClient | None = None
@@ -95,6 +100,7 @@ NAV_ITEMS = [
     ("/history",    "History"),
     ("/benchmarks", "Benchmarks"),
     ("/sessions",   "Sessions"),
+    ("/scanner",    "Scanner"),
     ("/graduation", "Graduation"),
     ("/approve",    "Approve"),
 ]
@@ -180,21 +186,45 @@ def _load_watchlist() -> list[str]:
         return []
 
 
+def _promote_to_watchlist(symbol: str) -> bool:
+    """Add a ticker to config/watchlist.json (dedup, preserving file shape).
+
+    Returns True if the symbol was newly added, False if already present / invalid.
+    """
+    symbol = (symbol or "").strip().upper()
+    if not symbol:
+        return False
+    p = _ROOT / "config" / "watchlist.json"
+    try:
+        data = json.loads(p.read_text()) if p.exists() else {}
+    except Exception:
+        data = {}
+    tickers = data.get("tickers", [])
+    if symbol in {t.upper() for t in tickers}:
+        return False
+    tickers.append(symbol)
+    data["tickers"] = tickers
+    p.write_text(json.dumps(data, indent=2) + "\n")
+    return True
+
+
+def _load_scanner_candidates() -> dict:
+    p = _ROOT / "config" / "scanner_candidates.json"
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {}
+
+
 def _market_status() -> tuple[str, str]:
-    """Return (label, css_class). css_class is one of: open pre after closed."""
-    if _ET is None:
-        return "–", "closed"
-    now = datetime.now(tz=_ET)
-    if now.weekday() >= 5:
-        return "CLOSED", "closed"
-    mins = now.hour * 60 + now.minute
-    if 240 <= mins < 570:
-        return "PRE-MARKET", "pre"
-    if 570 <= mins < 960:
-        return "OPEN", "open"
-    if 960 <= mins < 1200:
-        return "AFTER-HOURS", "after"
-    return "CLOSED", "closed"
+    """Return (label, css_class). css_class is one of: open pre after closed.
+
+    Delegates to orchestrator.scheduling.market_hours so the dashboard and the
+    daily scheduler share one definition of market hours.
+    """
+    return market_status()
 
 
 def _rel_time(ts_str: str) -> str:
@@ -1072,6 +1102,142 @@ details.debate[open] summary::before { transform: rotate(90deg); }
 }
 .btn-sm:hover { color: var(--txt); }
 
+/* ── Scanner ── */
+.scan-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.filter-strip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+}
+.filter-item { display: flex; flex-direction: column; gap: 2px; }
+.filter-key { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: var(--txt3); }
+.filter-val { font-family: var(--mono); font-size: 12px; color: var(--txt); font-variant-numeric: tabular-nums; }
+.btn-run {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid rgba(59,130,246,.4);
+  border-radius: var(--r);
+  padding: 10px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s;
+}
+.btn-run:hover { background: rgba(59,130,246,.18); border-color: rgba(59,130,246,.6); }
+.btn-promote {
+  background: rgba(34,197,94,.12);
+  color: var(--gain);
+  border: 1px solid rgba(34,197,94,.35);
+  border-radius: var(--r);
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  letter-spacing: .03em;
+  transition: background .12s;
+}
+.btn-promote:hover { background: rgba(34,197,94,.22); }
+.pill-on-wl {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--txt3);
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 3px 9px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.cap-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(139,92,246,.15);
+  color: var(--purple);
+}
+
+/* ── Alerts panel ── */
+.alerts-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+.alerts-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.alerts-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--warn);
+}
+.alerts-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--warn);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.alert-row {
+  display: grid;
+  grid-template-columns: 4px 64px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--subtle);
+}
+.alert-row:last-child { border-bottom: none; }
+.alert-accent { width: 4px; height: 100%; border-radius: 2px; align-self: stretch; }
+.alert-accent.warning  { background: var(--warn); }
+.alert-accent.critical { background: var(--loss); }
+.alert-accent.info     { background: var(--accent); }
+.alert-ticker { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+.alert-body { min-width: 0; }
+.alert-title { font-size: 12.5px; font-weight: 600; color: var(--txt); }
+.alert-msg { font-size: 11.5px; color: var(--txt2); margin-top: 2px; }
+.alert-time { font-size: 10.5px; color: var(--txt3); font-family: var(--mono); margin-top: 3px; }
+.btn-ack {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--txt2);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--sans);
+  padding: 6px 12px;
+  cursor: pointer;
+  letter-spacing: .03em;
+  transition: color .12s, border-color .12s;
+}
+.btn-ack:hover { color: var(--txt); border-color: var(--txt3); }
+
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -1326,10 +1492,66 @@ def _render_transcript(rounds: list[dict], rationale: str, dissent_summary: str)
 </details>"""
 
 
+# ── Alerts ────────────────────────────────────────────────────────────────────
+
+def _refresh_alerts() -> None:
+    """Evaluate trigger conditions and record any new alerts (deduped)."""
+    try:
+        AlertMonitor(
+            alert_store=_ALERTS,
+            decision_store=_DECISIONS,
+            position_store=_POSITIONS,
+            pending_store=_PENDING,
+            settings=_SETTINGS,
+            price_fn=_cached_price,
+            watchlist=_load_watchlist(),
+        ).evaluate()
+    except Exception:
+        pass  # dashboard must render even if alert evaluation hiccups
+
+
+def _render_alerts() -> str:
+    alerts = list(reversed(_ALERTS.unacknowledged()))
+    if not alerts:
+        return ""
+    rows = ""
+    for a in alerts:
+        sev = a.severity if a.severity in ("warning", "critical", "info") else "info"
+        rows += f"""
+<div class="alert-row">
+  <span class="alert-accent {sev}"></span>
+  <span class="alert-ticker">{_h(a.ticker or "—")}</span>
+  <div class="alert-body">
+    <div class="alert-title">{_h(a.title)}</div>
+    <div class="alert-msg">{_h(a.message)}</div>
+    <div class="alert-time">{_rel_time(a.created_at)}</div>
+  </div>
+  <form method="post" action="/alerts/ack/{_h(a.id)}" style="margin:0">
+    <button type="submit" class="btn-ack">Acknowledge</button>
+  </form>
+</div>"""
+    return f"""
+<div class="alerts-panel">
+  <div class="alerts-head">
+    <span class="alerts-lbl">Alerts</span>
+    <span class="alerts-count">{len(alerts)}</span>
+  </div>
+  {rows}
+</div>"""
+
+
+@app.route("/alerts/ack/<alert_id>", methods=["POST"])
+def acknowledge_alert(alert_id: str) -> Response:
+    _ALERTS.acknowledge(alert_id)
+    return redirect(url_for("overview"))
+
+
 # ── / — Portfolio Overview ────────────────────────────────────────────────────
 
 @app.route("/")
 def overview() -> Response:
+    _refresh_alerts()
+    alerts_panel = _render_alerts()
     open_pos = _POSITIONS.all_open()
     decisions_by_ts = {d["timestamp"]: d for d in _DECISIONS.load_all()}
     portfolio_val, cash = _portfolio_cash()
@@ -1426,7 +1648,7 @@ def overview() -> Response:
   <div class="page-title">Portfolio Overview</div>
   <div class="page-sub">Read-only · prices from local cache · no live API calls</div>
 </div>
-{recon_banner}{stat_bar}{table}"""
+{recon_banner}{alerts_panel}{stat_bar}{table}"""
     return _page("Overview", "/", body)
 
 
@@ -2013,6 +2235,115 @@ def do_reject(item_id: str) -> Response:
 
     _PENDING.reject(item_id, reason)
     return redirect(url_for("approve"))
+
+
+# ── /scanner — Universe Scanner Candidates ───────────────────────────────────
+
+@app.route("/scanner")
+def scanner() -> Response:
+    doc = _load_scanner_candidates()
+    candidates = doc.get("candidates", [])
+    filters = doc.get("filters", {})
+    on_wl = {t.upper() for t in _load_watchlist()}
+
+    cfg = _SETTINGS.scanner
+    floor = filters.get("market_cap_floor", cfg.market_cap_floor)
+    allow = filters.get("sector_allowlist", cfg.sector_allowlist) or ["All"]
+    deny = filters.get("sector_denylist", cfg.sector_denylist) or ["None"]
+    exchanges = ", ".join(filters.get("mics", cfg.mics))
+    generated = doc.get("generated_at", "")
+    gen_str = _rel_time(generated) if generated else "never"
+
+    filter_strip = f"""
+<div class="filter-strip">
+  <div class="filter-item"><span class="filter-key">Exchanges</span><span class="filter-val">{_h(exchanges)}</span></div>
+  <div class="filter-item"><span class="filter-key">Cap Floor</span><span class="filter-val">{_h(floor)}</span></div>
+  <div class="filter-item"><span class="filter-key">Sectors Allowed</span><span class="filter-val">{_h(", ".join(allow))}</span></div>
+  <div class="filter-item"><span class="filter-key">Sectors Denied</span><span class="filter-val">{_h(", ".join(deny))}</span></div>
+  <div class="filter-item"><span class="filter-key">Last Scan</span><span class="filter-val">{_h(gen_str)}</span></div>
+</div>"""
+
+    toolbar = f"""
+<div class="scan-toolbar">
+  {filter_strip}
+  <form method="post" action="/scanner/run" style="margin:0">
+    <button class="btn-run" type="submit">↻ Run Scan</button>
+  </form>
+</div>"""
+
+    if not candidates:
+        body = f"""
+<div class="page-hdr">
+  <div class="page-title">Universe Scanner</div>
+  <div class="page-sub">NYSE/NASDAQ candidates · promote tickers into the watchlist · does not feed the committee</div>
+</div>
+{toolbar}
+<div class="tbl-wrap"><div class="empty">No candidates yet. Run a scan to populate the list.</div></div>"""
+        return _page("Scanner", "/scanner", body)
+
+    rows_html = ""
+    for c in candidates:
+        sym = str(c.get("symbol", "")).upper()
+        promoted = sym in on_wl
+        action_cell = (
+            '<span class="pill-on-wl">On watchlist</span>' if promoted else
+            f'<form method="post" action="/scanner/promote/{_h(sym)}" style="margin:0">'
+            f'<button class="btn-promote" type="submit">Promote →</button></form>'
+        )
+        rows_html += f"""
+<tr>
+  <td><span class="ticker">{_h(sym)}</span></td>
+  <td class="muted" style="white-space:normal;max-width:280px">{_h(c.get("name",""))}</td>
+  <td>{_h(c.get("sector",""))}</td>
+  <td class="dim">{_h(c.get("industry",""))}</td>
+  <td><span class="cap-badge">{_h(c.get("market_cap",""))}</span></td>
+  <td class="dim">{_h(c.get("mic",""))}</td>
+  <td class="r">{action_cell}</td>
+</tr>"""
+
+    trunc_note = ""
+    if doc.get("truncated"):
+        trunc_note = (f' · capped at {filters.get("max_candidates", len(candidates))}'
+                      f' (more matched the filters)')
+
+    table = f"""
+<div class="tbl-wrap">
+  <div class="tbl-head">
+    <span class="tbl-lbl">Candidates</span>
+    <span class="tbl-count">{len(candidates)}{trunc_note}</span>
+  </div>
+  <table><thead><tr>
+    <th>Ticker</th><th>Name</th><th>Sector</th><th>Industry</th>
+    <th>Cap</th><th>Exch</th><th class="r">Action</th>
+  </tr></thead><tbody>{rows_html}</tbody></table>
+</div>"""
+
+    body = f"""
+<div class="page-hdr">
+  <div class="page-title">Universe Scanner</div>
+  <div class="page-sub">NYSE/NASDAQ candidates · promote tickers into the watchlist · does not feed the committee</div>
+</div>
+{toolbar}{table}"""
+    return _page("Scanner", "/scanner", body)
+
+
+# ── POST /scanner/run ─────────────────────────────────────────────────────────
+
+@app.route("/scanner/run", methods=["POST"])
+def do_scanner_run() -> Response:
+    try:
+        UniverseScanner(settings=_SETTINGS).scan()
+    except Exception as exc:  # financedatabase missing / network hiccup
+        app.logger.warning("Universe scan failed: %s", exc)
+    return redirect(url_for("scanner"))
+
+
+# ── POST /scanner/promote/<symbol> ────────────────────────────────────────────
+
+@app.route("/scanner/promote/<symbol>", methods=["POST"])
+def do_scanner_promote(symbol: str) -> Response:
+    _promote_to_watchlist(symbol)
+    return redirect(url_for("scanner"))
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

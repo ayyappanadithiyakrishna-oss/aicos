@@ -20,8 +20,12 @@ from data.fetcher import DataFetcher
 from ledger.decisions.store import DecisionStore
 from ledger.pending.store import PendingStore
 from ledger.positions.store import PositionStore
+from ledger.runs.store import RunStore
 from ledger.transactions.store import TransactionStore
 from orchestrator.committee.session import CommitteeSession
+from orchestrator.scheduling.daily_runner import DailyRunner, summarize_run
+from orchestrator.scheduling.market_hours import market_status, trading_day_str
+from orchestrator.scheduling.scheduler import DailyScheduler
 from orchestrator.workflows.investment_review import InvestmentReviewWorkflow
 from orchestrator.workflows.watchlist_runner import WatchlistRunner, format_summary
 
@@ -119,7 +123,7 @@ def run_watchlist(
     settings: Settings,
     watchlist_path: Path,
 ) -> None:
-    """Batch-run the watchlist and print the daily summary."""
+    """Batch-run the watchlist, print the daily summary, and log the run."""
     runner = WatchlistRunner(workflow=workflow, position_store=position_store, fetcher=fetcher)
 
     print(f"Running watchlist: {watchlist_path}")
@@ -129,6 +133,44 @@ def run_watchlist(
         wl_run,
         conviction_threshold=settings.committee.conviction_threshold,
     ))
+
+    # Append to the run ledger so manual CLI runs share the audit trail.
+    run_store = RunStore(settings.ledger.base_path / "runs" / "runs.jsonl")
+    record = summarize_run(
+        wl_run,
+        trigger="cli",
+        market_status_label=market_status()[0],
+        trading_day=trading_day_str(),
+    )
+    run_store.record(record)
+    print(f"Run logged: {record.run_id} ({record.trading_day}) → {run_store.path}")
+
+
+def run_schedule(
+    workflow: InvestmentReviewWorkflow,
+    position_store: PositionStore,
+    fetcher: DataFetcher,
+    settings: Settings,
+    watchlist_path: Path,
+    run_now: bool = False,
+) -> None:
+    """Start the blocking daily scheduler (runs until interrupted)."""
+    runner = WatchlistRunner(workflow=workflow, position_store=position_store, fetcher=fetcher)
+    run_store = RunStore(settings.ledger.base_path / "runs" / "runs.jsonl")
+    daily = DailyRunner(runner=runner, run_store=run_store, watchlist_path=watchlist_path)
+
+    if run_now:
+        print("Running an immediate watchlist run before scheduling…")
+        record = daily.execute(trigger="manual", force=True)
+        if record:
+            print(f"Immediate run logged: {record.run_id} ({record.trading_day})")
+
+    cfg = settings.scheduler
+    print(
+        f"Scheduler running — daily {cfg.day_of_week} at "
+        f"{cfg.hour:02d}:{cfg.minute:02d} {cfg.timezone}. Press Ctrl+C to stop."
+    )
+    DailyScheduler(daily_runner=daily, config=cfg).start()
 
 
 # ---------------------------------------------------------------------------
@@ -142,9 +184,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode",
-        choices=["interactive", "watchlist"],
+        choices=["interactive", "watchlist", "schedule"],
         default="interactive",
         help="Run mode (default: interactive)",
+    )
+    parser.add_argument(
+        "--run-now",
+        action="store_true",
+        default=False,
+        help="In schedule mode, run an immediate watchlist pass before scheduling",
     )
     parser.add_argument(
         "--watchlist",
@@ -170,6 +218,9 @@ def main() -> None:
 
     if args.mode == "watchlist":
         run_watchlist(workflow, position_store, fetcher, settings, args.watchlist)
+    elif args.mode == "schedule":
+        run_schedule(workflow, position_store, fetcher, settings, args.watchlist,
+                     run_now=args.run_now)
     else:
         run_interactive(workflow)
 

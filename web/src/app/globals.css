@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+/* ============================================================
+   AICOS — Scale design language
+   Holographic signal in a blackout room.
+   Pure black canvas, ultra-light display type, one accent: the
+   iridescent gradient (hero objects only — never on UI chrome).
+   Font CSS vars (--ff-inter, --ff-geist) are injected by next/font
+   in layout.tsx.
+   ============================================================ */
+
+@theme {
+  /* Colors */
+  --color-void: #000000;
+  --color-carbon: #0a0a0c;
+  --color-smoke: #16161a;
+  --color-graphite: #262626;
+  --color-bone: #ffffff;
+  --color-frost: #e5e5e5;
+  --color-ash: #a1a1a1;
+  --color-mute: #6b6b6b;
+  --color-lilac: #f4f0ff;
+  --color-irid-pink: #d1aad7;
+  --color-irid-blue: #bbdef2;
+
+  /* Semantic signal colors — terminal data only, used sparingly */
+  --color-bull: #4ade80;
+  --color-bear: #f87171;
+  --color-warn: #fbbf24;
+
+  /* Fonts */
+  --font-aeonik: var(--ff-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-inter: var(--ff-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-geist: var(--ff-geist), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Type scale */
+  --text-caption: 12px;
+  --text-body-sm: 14px;
+  --text-body: 16px;
+  --text-subheading: 18px;
+  --text-heading-sm: 20px;
+  --text-heading: 24px;
+  --text-heading-lg: 36px;
+  --text-display: 48px;
+  --text-display-lg: 72px;
+  --text-hero: 89px;
+
+  /* Spacing */
+  --spacing-8: 8px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-72: 72px;
+  --spacing-80: 80px;
+
+  /* Radii */
+  --radius-icons: 4px;
+  --radius-images: 8px;
+  --radius-cards: 16px;
+  --radius-pill: 9999px;
+}
+
+:root {
+  --gradient-irid: linear-gradient(135deg, #d1aad7 0%, #bbdef2 50%, #f4f0ff 100%);
+  --shadow-subtle: rgba(255, 255, 255, 0.1) 0px 1px 1px 0px inset;
+}
+
+* {
+  border-color: var(--color-graphite);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-bone);
+  font-family: var(--font-inter);
+  font-size: var(--text-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(212, 170, 215, 0.25);
+  color: #fff;
+}
+
+/* Thin scrollbars to keep the blackout intact */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-graphite); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* ---------- Reusable primitives ---------- */
+
+@utility eyebrow {
+  font-family: var(--font-geist);
+  font-size: var(--text-caption);
+  letter-spacing: 0.083em;
+  text-transform: uppercase;
+  color: var(--color-ash);
+}
+
+@utility display {
+  font-family: var(--font-aeonik);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+
+@utility mono {
+  font-family: var(--font-geist);
+  font-variant-numeric: tabular-nums;
+}
+
+@utility glass-edge {
+  box-shadow: var(--shadow-subtle);
+}
+
+/* The signature iridescent fill — hero objects / accent washes only */
+@utility irid {
+  background: var(--gradient-irid);
+}
+
+/* Subtle grid texture for the terminal canvas */
+.grid-canvas {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Streaming caret for live agent reasoning */
+@keyframes caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.caret::after {
+  content: "▍";
+  margin-left: 1px;
+  animation: caret 1s step-end infinite;
+  color: var(--color-ash);
+}
+
+/* Quiet pulse for "thinking" status dots */
+@keyframes breathe {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+.breathe { animation: breathe 1.6s ease-in-out infinite; }
+
+/* Macro ticker marquee — scrolls at ~40px/s, pauses on hover */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Slow drift for the hero holographic object */
+@keyframes drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-18px) rotate(3deg); }
+}
+.drift { animation: drift 9s ease-in-out infinite; }

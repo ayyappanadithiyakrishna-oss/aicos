@@ -39,9 +39,55 @@ class PortfolioConfig:
 
 
 @dataclass
+class ScannerConfig:
+    """Universe scanner filters (financedatabase-backed).
+
+    Note: financedatabase reports market cap as an ordered category, not a dollar
+    figure, so the floor is a tier name. Ordered smallest→largest:
+        Nano Cap < Micro Cap < Small Cap < Mid Cap < Large Cap < Mega Cap
+    ``market_cap_floor`` keeps that tier and every larger one.
+    """
+
+    # NYSE / NASDAQ MIC codes. Kept configurable but defaults to the scoped exchanges.
+    mics: list[str] = field(default_factory=lambda: ["XNYS", "XNAS"])
+    country: str = "United States"
+
+    market_cap_floor: str = "Mid Cap"
+
+    # Sector filters. Empty allowlist = all sectors permitted; denylist always subtracts.
+    # Sector names must match financedatabase's set (e.g. "Information Technology",
+    # "Health Care", "Financials", "Energy", "Utilities", …).
+    sector_allowlist: list[str] = field(default_factory=list)
+    sector_denylist: list[str] = field(default_factory=list)
+
+    exclude_delisted: bool = True
+    max_candidates: int = 250  # cap the written candidate list
+
+    output_path: Path = Path("config/scanner_candidates.json")
+
+
+@dataclass
+class SchedulerConfig:
+    """Daily watchlist scheduler.
+
+    Fires once per weekday at (hour:minute) US/Eastern; the job itself re-checks
+    market hours and enforces once-per-trading-day via the run ledger. Default is
+    09:35 ET — five minutes after the regular open — so intraday prices are live.
+    """
+
+    hour: int = 9
+    minute: int = 35
+    timezone: str = "America/New_York"
+    day_of_week: str = "mon-fri"          # cron field; weekends never fire
+    misfire_grace_seconds: int = 3600      # tolerate a late wake-up within the hour
+
+
+@dataclass
 class Settings:
     ledger: LedgerConfig = field(default_factory=LedgerConfig)
     committee: CommitteeConfig = field(default_factory=CommitteeConfig)
     portfolio: PortfolioConfig = field(default_factory=PortfolioConfig)
+    scanner: ScannerConfig = field(default_factory=ScannerConfig)
+    scheduler: SchedulerConfig = field(default_factory=SchedulerConfig)
     model: str = "claude-opus-4-8"
     dry_run: bool = True
