@@ -55,6 +55,16 @@ _STALENESS_DAYS = 182        # 6 months — threshold for stale-filing warning
 _MAX_DEBT_TO_EQUITY = 20.0   # 20× ratio; yfinance returns as %, so we divide by 100
 _FMP_BASE = "https://financialmodelingprep.com/api"
 
+# Cross-check tolerances: field → max acceptable relative difference (fraction).
+# Price uses a tighter tolerance than fundamentals because it should be near-real-time.
+_CROSS_CHECK_TOLERANCES: dict[str, float] = {
+    "price":             0.02,   # 2%
+    "market_cap":        0.10,   # 10%
+    "pe_ratio_trailing": 0.10,
+    "revenue_ttm":       0.10,
+    "ebitda":            0.10,
+}
+
 
 # ---------------------------------------------------------------------------
 # Core data structures
@@ -285,7 +295,11 @@ class DataQualityValidator:
     can chain: data = validator.validate(data).
     """
 
-    def validate(self, data: TickerData) -> TickerData:
+    def validate(
+        self,
+        data: TickerData,
+        cross_check_warnings: list[str] | None = None,
+    ) -> TickerData:
         warnings: list[str] = []
         checks: list[str] = []
 
@@ -368,6 +382,13 @@ class DataQualityValidator:
                     msg = f"Missing income statement field '{required}' in {latest}"
                     warnings.append(msg)
                     logger.warning("[DataQuality] %s: %s", data.ticker, msg)
+
+        # ── 10. Cross-check: yfinance vs FMP ──────────────────────────────
+        if cross_check_warnings:
+            checks.append("cross_check_yf_fmp")
+            for w in cross_check_warnings:
+                warnings.append(w)
+                logger.warning("[DataQuality] %s: %s", data.ticker, w)
 
         # Critical validity: no price AND no income statement is unfixable
         is_valid = not (
@@ -621,6 +642,80 @@ def _fetch_technical_snapshot(ticker: str, api_key: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# FMP cross-check
+# ---------------------------------------------------------------------------
+
+def _fetch_fmp_quote(ticker: str, api_key: str) -> dict[str, Any]:
+    """Fetch price and key fundamentals from FMP for cross-checking against yfinance."""
+    result: dict[str, Any] = {}
+
+    quote = _fmp_get(f"/v3/quote/{ticker}", api_key)
+    if isinstance(quote, list) and quote:
+        q = quote[0]
+        result["price"] = q.get("price")
+        result["market_cap"] = q.get("marketCap")
+        result["pe_ratio_trailing"] = q.get("pe")
+
+    profile = _fmp_get(f"/v3/profile/{ticker}", api_key)
+    if isinstance(profile, list) and profile:
+        p = profile[0]
+        if "price" not in result or result["price"] is None:
+            result["price"] = p.get("price")
+        if "market_cap" not in result or result["market_cap"] is None:
+            result["market_cap"] = p.get("mktCap")
+
+    ratios = _fmp_get(f"/v3/ratios-ttm/{ticker}", api_key)
+    if isinstance(ratios, list) and ratios:
+        r = ratios[0]
+        if result.get("pe_ratio_trailing") is None:
+            result["pe_ratio_trailing"] = r.get("peRatioTTM")
+
+    income = _fmp_get(f"/v3/income-statement/{ticker}", api_key, {"limit": "1"})
+    if isinstance(income, list) and income:
+        stmt = income[0]
+        result["revenue_ttm"] = stmt.get("revenue")
+        result["ebitda"] = stmt.get("ebitda")
+
+    return result
+
+
+def cross_check_sources(
+    yf_ratios: dict[str, Any],
+    fmp_ratios: dict[str, Any],
+    ticker: str,
+    tolerances: dict[str, float] | None = None,
+) -> list[str]:
+    """Compare yfinance and FMP values; return warning strings for disagreements."""
+    tols = tolerances or _CROSS_CHECK_TOLERANCES
+    warnings: list[str] = []
+
+    for field_name, max_diff in tols.items():
+        yf_val = yf_ratios.get(field_name)
+        fmp_val = fmp_ratios.get(field_name)
+
+        if yf_val is None or fmp_val is None:
+            continue
+        if not isinstance(yf_val, (int, float)) or not isinstance(fmp_val, (int, float)):
+            continue
+
+        if yf_val == 0 and fmp_val == 0:
+            continue
+        ref = max(abs(yf_val), abs(fmp_val))
+        if ref == 0:
+            continue
+
+        rel_diff = abs(yf_val - fmp_val) / ref
+        if rel_diff > max_diff:
+            warnings.append(
+                f"Cross-check disagreement on {field_name}: "
+                f"yfinance={yf_val:,.4g} vs FMP={fmp_val:,.4g} "
+                f"({rel_diff:.1%} diff, tolerance {max_diff:.0%})"
+            )
+
+    return warnings
+
+
+# ---------------------------------------------------------------------------
 # DataFetcher — public API
 # ---------------------------------------------------------------------------
 
@@ -661,7 +756,12 @@ class DataFetcher:
             data.macro_snapshot = self._fetch_macro_cached()
             data.technical_snapshot = _fetch_technical_snapshot(ticker, self._fmp_key)
 
-        self._validator.validate(data)
+            fmp_quote = _fetch_fmp_quote(ticker, self._fmp_key)
+            cross_warnings = cross_check_sources(data.key_ratios, fmp_quote, ticker)
+        else:
+            cross_warnings = []
+
+        self._validator.validate(data, cross_check_warnings=cross_warnings)
         self._save_cache(cache_path, data)
         return data
 
