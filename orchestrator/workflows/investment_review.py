@@ -140,7 +140,11 @@ class InvestmentReviewWorkflow:
                 )
             )
         if position is not None:
-            self.position_store.upsert(position)
+            if action == "closed":
+                ts_str = tx.timestamp if tx else result.timestamp.astimezone(timezone.utc).isoformat()
+                self.position_store.close(position.ticker, ts_str)
+            else:
+                self.position_store.upsert(position)
         if tx is not None:
             self.transaction_store.record(tx)
 
@@ -285,8 +289,6 @@ class InvestmentReviewWorkflow:
                 )
                 return "pending", reasoning, None, None, size_est
 
-            # Close the position in-place (PositionStore.close mutates + saves)
-            closed = self.position_store.close(ticker, ts)
             pnl = (price - existing.avg_cost) * existing.shares
             tx = Transaction(
                 id=_new_tx_id(ticker, "sell"),
@@ -310,7 +312,7 @@ class InvestmentReviewWorkflow:
                 f"Sold {existing.shares:.4f} share(s) of {ticker} @ ${price:.2f}. "
                 f"P&L: ${pnl:+.2f} ({(price / existing.avg_cost - 1):+.1%})."
             )
-            return "closed", reasoning, closed, tx, None
+            return "closed", reasoning, existing, tx, None
 
         # ── Hold or any other signal ─────────────────────────────────────────
         reasoning = (
