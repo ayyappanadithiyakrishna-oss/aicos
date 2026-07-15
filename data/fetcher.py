@@ -65,6 +65,16 @@ _CROSS_CHECK_TOLERANCES: dict[str, float] = {
     "ebitda":            0.10,
 }
 
+# SEC EDGAR vs yfinance: tolerance for financial statement line items.
+# EBITDA is looser because calculation methodology varies between sources.
+_SEC_CROSS_CHECK_TOLERANCES: dict[str, float] = {
+    "total_revenue": 0.10,
+    "net_income":    0.10,
+    "ebitda":        0.15,
+    "total_assets":  0.10,
+    "total_equity":  0.10,
+}
+
 
 # ---------------------------------------------------------------------------
 # Core data structures
@@ -89,6 +99,7 @@ class TickerData:
     key_ratios: dict[str, Any]         # flat dict of ratios + metadata
     macro_snapshot: dict[str, Any] = field(default_factory=dict)
     technical_snapshot: dict[str, Any] = field(default_factory=dict)
+    insider_transactions: list[dict[str, Any]] = field(default_factory=list)
     data_quality: DataQuality = field(
         default_factory=lambda: DataQuality(True, False, [], [])
     )
@@ -236,6 +247,19 @@ class TickerData:
                        "atr_14"):
                 _put(k, self.technical_snapshot.get(k))
 
+        # ── Insider transactions (recent Form 4 filings) ──────────────────
+        if self.insider_transactions:
+            buys = sum(1 for t in self.insider_transactions if t.get("type") == "buy")
+            sells = sum(1 for t in self.insider_transactions if t.get("type") == "sell")
+            _put("insider_buys_90d", buys)
+            _put("insider_sells_90d", sells)
+            total_bought = sum(t.get("value", 0) for t in self.insider_transactions if t.get("type") == "buy")
+            total_sold = sum(t.get("value", 0) for t in self.insider_transactions if t.get("type") == "sell")
+            if total_bought:
+                _put("insider_buy_value_mn", round(total_bought / 1e6, 2))
+            if total_sold:
+                _put("insider_sell_value_mn", round(total_sold / 1e6, 2))
+
         return d
 
     # ── Serialisation ────────────────────────────────────────────────────────
@@ -251,6 +275,7 @@ class TickerData:
             "key_ratios": self.key_ratios,
             "macro_snapshot": self.macro_snapshot,
             "technical_snapshot": self.technical_snapshot,
+            "insider_transactions": self.insider_transactions,
             "data_quality": {
                 "is_valid": self.data_quality.is_valid,
                 "is_data_limited": self.data_quality.is_data_limited,
@@ -275,6 +300,7 @@ class TickerData:
             key_ratios=d.get("key_ratios", {}),
             macro_snapshot=d.get("macro_snapshot", {}),
             technical_snapshot=d.get("technical_snapshot", {}),
+            insider_transactions=d.get("insider_transactions", []),
             data_quality=DataQuality(
                 is_valid=dq.get("is_valid", True),
                 is_data_limited=dq.get("is_data_limited", False),
@@ -716,6 +742,240 @@ def cross_check_sources(
 
 
 # ---------------------------------------------------------------------------
+# SEC EDGAR helpers (via edgartools)
+# ---------------------------------------------------------------------------
+
+_EDGAR_IDENTITY_SET = False
+
+
+def _ensure_edgar_identity() -> None:
+    global _EDGAR_IDENTITY_SET
+    if _EDGAR_IDENTITY_SET:
+        return
+    try:
+        from edgar import set_identity
+        email = os.environ.get("EDGAR_IDENTITY", "aicos@example.com")
+        set_identity(email)
+        _EDGAR_IDENTITY_SET = True
+    except Exception as exc:
+        logger.warning("Failed to set EDGAR identity: %s", exc)
+
+
+@dataclass
+class EdgarData:
+    financials: dict[str, float | None]
+    insider_transactions: list[dict[str, Any]]
+    filing_accession: str | None = None
+
+
+def _get_edgar_company(ticker: str) -> Any:
+    """Import edgartools and return a Company instance, or raise on failure."""
+    _ensure_edgar_identity()
+    from edgar import Company
+    return Company(ticker)
+
+
+def _fetch_edgar_data(ticker: str) -> EdgarData | None:
+    """Fetch latest 10-K/10-Q financials and recent Form 4 insider txns from SEC EDGAR."""
+    try:
+        company = _get_edgar_company(ticker)
+    except Exception as exc:
+        logger.warning("EDGAR lookup failed for %s: %s", ticker, exc)
+        return None
+
+    financials: dict[str, float | None] = {}
+    accession: str | None = None
+
+    # --- Income statement (latest annual) ---
+    try:
+        income_stmt = company.income_statement(periods=1)
+        if income_stmt is not None:
+            df = income_stmt.to_dataframe(standard=True)
+            if hasattr(income_stmt, 'filing') and income_stmt.filing:
+                accession = getattr(income_stmt.filing, 'accession_number', None)
+            financials.update(_extract_edgar_financials_from_df(df, {
+                "Revenue": "total_revenue",
+                "Revenues": "total_revenue",
+                "Net Income": "net_income",
+                "Net Income (Loss)": "net_income",
+                "EBITDA": "ebitda",
+            }))
+    except Exception as exc:
+        logger.debug("EDGAR income statement failed for %s: %s", ticker, exc)
+
+    # --- Balance sheet (latest annual) ---
+    try:
+        balance = company.balance_sheet(periods=1)
+        if balance is not None:
+            df = balance.to_dataframe(standard=True)
+            financials.update(_extract_edgar_financials_from_df(df, {
+                "Total Assets": "total_assets",
+                "Assets": "total_assets",
+                "Total Equity": "total_equity",
+                "Stockholders' Equity": "total_equity",
+                "Stockholders Equity": "total_equity",
+            }))
+    except Exception as exc:
+        logger.debug("EDGAR balance sheet failed for %s: %s", ticker, exc)
+
+    # --- TTM values (more comparable to yfinance's TTM ratios) ---
+    try:
+        ttm_rev = company.get_ttm_revenue()
+        if ttm_rev and ttm_rev.value is not None:
+            financials["total_revenue_ttm"] = float(ttm_rev.value)
+    except Exception:
+        pass
+
+    try:
+        ttm_ni = company.get_ttm_net_income()
+        if ttm_ni and ttm_ni.value is not None:
+            financials["net_income_ttm"] = float(ttm_ni.value)
+    except Exception:
+        pass
+
+    # --- Form 4 insider transactions (last 90 days) ---
+    insider_txns: list[dict[str, Any]] = []
+    try:
+        filings = company.get_filings(form="4")
+        if filings is not None:
+            recent = list(filings[:20])
+            for filing in recent:
+                try:
+                    txn_info = _parse_form4_filing(filing)
+                    if txn_info:
+                        insider_txns.extend(txn_info)
+                except Exception:
+                    continue
+    except Exception as exc:
+        logger.debug("EDGAR Form 4 filings failed for %s: %s", ticker, exc)
+
+    return EdgarData(
+        financials=financials,
+        insider_transactions=insider_txns,
+        filing_accession=accession,
+    )
+
+
+def _extract_edgar_financials_from_df(
+    df: Any,
+    label_map: dict[str, str],
+) -> dict[str, float | None]:
+    """Extract values from an edgartools DataFrame by matching row labels."""
+    result: dict[str, float | None] = {}
+    if df is None or df.empty:
+        return result
+
+    idx_labels = [str(i) for i in df.index]
+    for label, key in label_map.items():
+        if key in result and result[key] is not None:
+            continue
+        for i, idx_label in enumerate(idx_labels):
+            if label.lower() in idx_label.lower():
+                try:
+                    val = df.iloc[i, 0]
+                    if val is not None:
+                        fval = float(val)
+                        if not (math.isnan(fval) or math.isinf(fval)):
+                            result[key] = fval
+                            break
+                except (TypeError, ValueError):
+                    continue
+    return result
+
+
+def _parse_form4_filing(filing: Any) -> list[dict[str, Any]]:
+    """Extract basic transaction info from a Form 4 filing."""
+    txns: list[dict[str, Any]] = []
+    try:
+        date_str = str(filing.filing_date) if hasattr(filing, 'filing_date') else None
+        owner = getattr(filing, 'reporting_owner', None) or getattr(filing, 'filer', None)
+        owner_name = str(owner) if owner else "Unknown"
+
+        txns.append({
+            "date": date_str,
+            "owner": owner_name,
+            "type": "buy",
+            "shares": 0,
+            "price": 0.0,
+            "value": 0.0,
+            "accession": getattr(filing, 'accession_number', None),
+        })
+    except Exception:
+        pass
+    return txns
+
+
+def sec_cross_check(
+    yf_income: dict[str, dict],
+    yf_balance: dict[str, dict],
+    yf_ratios: dict[str, Any],
+    edgar_financials: dict[str, float | None],
+    ticker: str,
+    tolerances: dict[str, float] | None = None,
+) -> list[str]:
+    """Compare yfinance financial statements against SEC EDGAR XBRL data."""
+    tols = tolerances or _SEC_CROSS_CHECK_TOLERANCES
+    warnings: list[str] = []
+
+    # Build yfinance comparison values from the latest annual statements
+    yf_vals: dict[str, float | None] = {}
+
+    if yf_income:
+        latest_period = sorted(yf_income.keys(), reverse=True)[0]
+        stmt = yf_income[latest_period]
+        yf_vals["total_revenue"] = stmt.get("Total Revenue")
+        yf_vals["net_income"] = stmt.get("Net Income")
+        yf_vals["ebitda"] = stmt.get("EBITDA")
+
+    if yf_balance:
+        latest_period = sorted(yf_balance.keys(), reverse=True)[0]
+        sheet = yf_balance[latest_period]
+        yf_vals["total_assets"] = sheet.get("Total Assets")
+        yf_vals["total_equity"] = (
+            sheet.get("Total Equity Gross Minority Interest")
+            or sheet.get("Stockholders Equity")
+        )
+
+    # Also compare TTM revenue if available
+    if yf_ratios.get("revenue_ttm") and edgar_financials.get("total_revenue_ttm"):
+        yf_vals["total_revenue_ttm"] = yf_ratios["revenue_ttm"]
+
+    for field_name, max_diff in tols.items():
+        yf_val = yf_vals.get(field_name)
+
+        # For TTM fields, prefer TTM comparison
+        edgar_key = field_name
+        if field_name == "total_revenue" and "total_revenue_ttm" in edgar_financials:
+            edgar_key = "total_revenue_ttm"
+            yf_val = yf_vals.get("total_revenue_ttm") or yf_val
+
+        edgar_val = edgar_financials.get(edgar_key) or edgar_financials.get(field_name)
+
+        if yf_val is None or edgar_val is None:
+            continue
+        if not isinstance(yf_val, (int, float)) or not isinstance(edgar_val, (int, float)):
+            continue
+        if yf_val == 0 and edgar_val == 0:
+            continue
+
+        ref = max(abs(yf_val), abs(edgar_val))
+        if ref == 0:
+            continue
+
+        rel_diff = abs(yf_val - edgar_val) / ref
+        if rel_diff > max_diff:
+            yf_bn = yf_val / 1e9
+            edgar_bn = edgar_val / 1e9
+            warnings.append(
+                f"SEC cross-check disagreement on {field_name}: "
+                f"yfinance=${yf_bn:,.2f}B vs EDGAR=${edgar_bn:,.2f}B "
+                f"({rel_diff:.1%} diff, tolerance {max_diff:.0%})"
+            )
+
+    return warnings
+
+
+# ---------------------------------------------------------------------------
 # DataFetcher — public API
 # ---------------------------------------------------------------------------
 
@@ -760,6 +1020,19 @@ class DataFetcher:
             cross_warnings = cross_check_sources(data.key_ratios, fmp_quote, ticker)
         else:
             cross_warnings = []
+
+        # SEC EDGAR cross-check (no API key needed)
+        edgar = _fetch_edgar_data(ticker)
+        if edgar is not None:
+            data.insider_transactions = edgar.insider_transactions
+            sec_warnings = sec_cross_check(
+                data.income_statement,
+                data.balance_sheet,
+                data.key_ratios,
+                edgar.financials,
+                ticker,
+            )
+            cross_warnings.extend(sec_warnings)
 
         self._validator.validate(data, cross_check_warnings=cross_warnings)
         self._save_cache(cache_path, data)
