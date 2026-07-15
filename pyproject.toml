@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "aicos"
@@ -10,11 +10,15 @@ requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.30",
     "flask>=3.0",
+    "pydantic>=2.0",
     "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff", "mypy", "yfinance>=0.2"]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "benchmarks*", "config*", "dashboard*", "ledger*", "orchestrator*", "tools*"]
 
 [tool.ruff]
 line-length = 100
