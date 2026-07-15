@@ -135,17 +135,13 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 }
 
 function Logo() {
+  // Mercury concentric-circle mark: specialist orbits resolving to a cobalt core.
   return (
     <span className="grid h-7 w-7 place-items-center rounded-icons">
       <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
-        <defs>
-          <linearGradient id="irid" x1="0" y1="0" x2="24" y2="24">
-            <stop offset="0%" stopColor="#d1aad7" />
-            <stop offset="50%" stopColor="#bbdef2" />
-            <stop offset="100%" stopColor="#f4f0ff" />
-          </linearGradient>
-        </defs>
-        <path d="M21 3 3 10.5l6.5 2.5L21 3ZM9.5 13l2.5 6.5L21 3 9.5 13Z" fill="url(#irid)" />
+        <circle cx="12" cy="12" r="10" stroke="#ededf3" strokeOpacity="0.35" strokeWidth="1" />
+        <circle cx="12" cy="12" r="6" stroke="#ededf3" strokeOpacity="0.55" strokeWidth="1" />
+        <circle cx="12" cy="12" r="2.4" fill="#5266eb" />
       </svg>
     </span>
   );

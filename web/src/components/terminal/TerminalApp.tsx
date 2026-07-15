@@ -12,7 +12,7 @@ import { ChartPanel } from "./ChartPanel";
 import { QuotePanel } from "./QuotePanel";
 import { OrderEntry } from "./OrderEntry";
 import { TickerSearch } from "./TickerSearch";
-import { PaperPortfolio } from "./PaperPortfolio";
+import { AlpacaPortfolio } from "./AlpacaPortfolio";
 import { MacroBar, PortfolioPanel, WatchlistPanel, NewsPanel } from "./SidePanels";
 import { CommitteeRoom } from "@/components/committee/CommitteeRoom";
 import { cn } from "@/lib/utils";
@@ -147,8 +147,13 @@ export function TerminalApp({ initial = "NVDA" }: { initial?: string }) {
                 accountNumber={AICOS_ACCOUNT}
               />
             </Panel>
-            <Panel title="Paper Portfolio">
-              <PaperPortfolio ticker={ticker} />
+            <Panel title="Alpaca Paper Engine" bodyClassName="p-0">
+              <AlpacaPortfolio
+                ticker={ticker}
+                quote={quote}
+                verdict={verdict}
+                referencePrice={referencePrice}
+              />
             </Panel>
             <Panel title="Portfolio">
               <PortfolioPanel onSelect={select} orders={openOrders} />

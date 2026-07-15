@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({
   variable: "--ff-inter",
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["400", "500", "600"],
 });
 
 const geistMono = Geist_Mono({

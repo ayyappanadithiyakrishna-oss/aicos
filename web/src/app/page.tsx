@@ -1,9 +1,9 @@
 import { TopNav } from "@/components/terminal/TopNav";
-import { AGENTS } from "@/lib/committee";
 import {
   AnimatedHero,
   AnimatedLogoStrip,
   AnimatedCommittee,
+  AnimatedCapabilities,
   AnimatedProcess,
 } from "@/components/marketing/AnimatedSections";
 
@@ -11,11 +11,11 @@ export default function Home() {
   return (
     <>
       {/* announcement bar */}
-      <div className="w-full border-b border-graphite bg-void py-2 text-center">
-        <p className="text-body-sm text-bone">
-          AICOS is in private beta for funds and family offices.{" "}
-          <a href="/terminal" className="font-medium text-lilac hover:underline">
-            Request access →
+      <div className="w-full border-b border-graphite bg-void py-2.5 text-center">
+        <p className="text-body-sm text-ash">
+          Now trading live on Alpaca paper.{" "}
+          <a href="/terminal" className="font-medium text-cobalt hover:underline">
+            Open the terminal →
           </a>
         </p>
       </div>
@@ -26,6 +26,7 @@ export default function Home() {
         <AnimatedHero />
         <AnimatedLogoStrip />
         <AnimatedCommittee />
+        <AnimatedCapabilities />
         <AnimatedProcess />
       </main>
 
@@ -35,7 +36,7 @@ export default function Home() {
             © 2026 AICOS — AI Investment Committee OS
           </p>
           <p className="text-caption text-mute">
-            For research and decision support. Not investment advice.
+            Alpaca paper trading. For research and decision support — not investment advice.
           </p>
         </div>
       </footer>

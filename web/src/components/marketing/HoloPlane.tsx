@@ -1,42 +1,67 @@
-/* The signature asset: a holographic paper-plane, the only chromatic
-   moment on the page. Pure SVG so it stays crisp and dependency-free. */
+/* The signature asset — "committee convergence."
+   Six faint specialist orbits (one per agent) resolve inward to a single
+   cobalt verdict point: the whole thesis of AICOS in one mark. Monochrome
+   ivory on onyx with cobalt as the only chromatic note, per Mercury.
+   Pure SVG so it stays crisp and dependency-free. */
 export function HoloPlane({ className }: { className?: string }) {
+  const rings = [140, 118, 96, 74, 52, 30];
   return (
     <div className={className}>
-      <div className="drift">
-        <svg viewBox="0 0 320 320" className="h-full w-full" fill="none">
+      <div className="drift relative h-full w-full">
+        {/* cobalt bloom behind the mark */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 50%, rgba(82,102,235,0.22) 0%, rgba(82,102,235,0) 62%)",
+          }}
+        />
+        <svg viewBox="0 0 320 320" className="relative h-full w-full" fill="none">
           <defs>
-            <linearGradient id="face-a" x1="40" y1="40" x2="280" y2="280">
-              <stop offset="0%" stopColor="#d1aad7" />
-              <stop offset="55%" stopColor="#bbdef2" />
-              <stop offset="100%" stopColor="#f4f0ff" />
-            </linearGradient>
-            <linearGradient id="face-b" x1="160" y1="40" x2="160" y2="300">
-              <stop offset="0%" stopColor="#bbdef2" />
-              <stop offset="100%" stopColor="#d1aad7" />
-            </linearGradient>
-            <linearGradient id="face-c" x1="60" y1="300" x2="300" y2="120">
-              <stop offset="0%" stopColor="#f4f0ff" />
-              <stop offset="100%" stopColor="#bbdef2" />
-            </linearGradient>
-            <radialGradient id="glow" cx="50%" cy="45%" r="55%">
-              <stop offset="0%" stopColor="#bbdef2" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#000" stopOpacity="0" />
+            <radialGradient id="core" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#7d8dff" />
+              <stop offset="100%" stopColor="#5266eb" />
             </radialGradient>
           </defs>
 
-          <circle cx="160" cy="150" r="150" fill="url(#glow)" />
+          {/* concentric specialist orbits */}
+          {rings.map((r, i) => (
+            <circle
+              key={r}
+              cx="160"
+              cy="160"
+              r={r}
+              stroke="#ededf3"
+              strokeOpacity={0.06 + i * 0.035}
+              strokeWidth={i === rings.length - 1 ? 1 : 0.75}
+            />
+          ))}
 
-          {/* paper plane — three faces */}
-          <path d="M276 44 92 150l64 22L276 44Z" fill="url(#face-a)" />
-          <path d="M276 44 156 172l24 78L276 44Z" fill="url(#face-b)" opacity="0.92" />
-          <path d="M156 172l24 78 18-40-42-38Z" fill="url(#face-c)" opacity="0.8" />
-          <path
-            d="M276 44 92 150l64 22L276 44Zm0 0L156 172l24 78L276 44Z"
-            stroke="#f4f0ff"
-            strokeOpacity="0.35"
-            strokeWidth="0.75"
-          />
+          {/* six agent nodes distributed around the outer orbit, each wired to the core */}
+          {Array.from({ length: 6 }).map((_, i) => {
+            const a = (Math.PI * 2 * i) / 6 - Math.PI / 2;
+            const R = 140;
+            const x = 160 + Math.cos(a) * R;
+            const y = 160 + Math.sin(a) * R;
+            return (
+              <g key={i}>
+                <line
+                  x1={x}
+                  y1={y}
+                  x2="160"
+                  y2="160"
+                  stroke="#5266eb"
+                  strokeOpacity="0.16"
+                  strokeWidth="0.75"
+                />
+                <circle cx={x} cy={y} r="3.5" fill="#ededf3" fillOpacity="0.8" />
+              </g>
+            );
+          })}
+
+          {/* the verdict — single cobalt point */}
+          <circle cx="160" cy="160" r="9" fill="url(#core)" />
+          <circle cx="160" cy="160" r="16" stroke="#5266eb" strokeOpacity="0.5" strokeWidth="1" />
         </svg>
       </div>
     </div>

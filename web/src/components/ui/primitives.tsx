@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/* The single button shape in the system: a ghost pill. */
+/* Mercury controls are pills. Cobalt is the sole chromatic action;
+   ghost is an ivory-outline pill for secondary intents. */
 export function Pill({
   children,
   href,
@@ -21,10 +22,10 @@ export function Pill({
   type?: "button" | "submit";
 }) {
   const base = cn(
-    "inline-flex items-center gap-2 rounded-pill px-5 py-2 text-body-sm font-medium transition-colors duration-200 select-none",
+    "inline-flex items-center gap-2 rounded-pill px-5 py-2.5 text-body-sm font-medium transition-colors duration-200 select-none",
     variant === "ghost"
-      ? "border border-ash/60 text-bone hover:border-bone hover:bg-bone/5"
-      : "bg-bone text-void hover:bg-frost",
+      ? "border border-bone/80 text-bone hover:bg-bone/10"
+      : "bg-cobalt text-pure-white hover:bg-cobalt-hover",
     className,
   );
   const inner = (
@@ -79,7 +80,7 @@ export function Eyebrow({
   return <p className={cn("eyebrow", className)}>{children}</p>;
 }
 
-/* Terminal panel — Carbon surface, hairline border, optional title rail. */
+/* Terminal panel — flat graphite card, 12px radius, hairline rail. No shadow. */
 export function Panel({
   title,
   action,
@@ -96,7 +97,7 @@ export function Panel({
   return (
     <section
       className={cn(
-        "flex flex-col rounded-cards border border-graphite bg-carbon/80 backdrop-blur-sm overflow-hidden",
+        "flex flex-col rounded-cards border border-graphite bg-smoke overflow-hidden",
         className,
       )}
     >

@@ -13,3 +13,4 @@ dist/
 .ruff_cache/
 .claude/
 .codegraph/
+.gstack/

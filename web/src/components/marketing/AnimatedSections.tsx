@@ -11,57 +11,70 @@ import { AGENTS } from "@/lib/committee";
 
 export function AnimatedHero() {
   return (
-    <section className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-20 lg:grid-cols-2 lg:py-28">
-      <div>
+    <section className="relative flex min-h-[calc(100vh-6.5rem)] items-center justify-center overflow-hidden px-5 py-24 text-center">
+      {/* ambient convergence mark — the observatory backdrop */}
+      <motion.div
+        initial={{ opacity: 0, scale: 1.05 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[min(140vw,900px)] -translate-x-1/2 -translate-y-1/2"
+      >
+        <HoloPlane className="h-full w-full opacity-70" />
+      </motion.div>
+      {/* onyx vignette so the type stays legible over the mark */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(80% 60% at 50% 45%, rgba(23,23,33,0) 30%, rgba(23,23,33,0.85) 100%)",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-[720px]">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Eyebrow>AI for the buy-side</Eyebrow>
+          <span className="inline-flex items-center gap-2 rounded-pill border border-graphite bg-smoke/70 px-4 py-1.5 text-caption text-ash backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-pill bg-cobalt breathe" />
+            AI for the buy-side
+          </span>
         </motion.div>
 
         <motion.h1
-          initial={{ opacity: 0, y: 28 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="display mt-5 text-display leading-[1.05] text-bone sm:text-display-lg"
+          className="display mt-7 text-display text-bone sm:text-hero"
         >
-          Every decision passes through the committee.
+          Every decision passes
+          <br className="hidden sm:block" /> through the committee.
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.25 }}
-          className="mt-6 max-w-md text-body text-ash"
+          className="mx-auto mt-6 max-w-[34rem] text-body-lg text-ash"
         >
-          AICOS replicates an institutional investment committee. Six specialist
-          AI agents independently analyze, challenge one another, and rule on a
-          thesis — before a dollar of capital moves.
+          AICOS convenes an institutional investment committee of six specialist
+          AI agents. They analyze independently, challenge one another, and rule
+          on a thesis — then trade it, live, on Alpaca paper.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.38 }}
-          className="mt-8 flex items-center gap-5"
+          className="mt-9 flex flex-wrap items-center justify-center gap-4"
         >
           <Pill href="/terminal" variant="solid" arrow>
-            Launch Terminal
+            Open the terminal
           </Pill>
-          <TextLink href="#committee">See the committee</TextLink>
+          <TextLink href="#committee">Meet the committee</TextLink>
         </motion.div>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-        className="mx-auto aspect-square w-full max-w-md"
-      >
-        <HoloPlane className="h-full w-full" />
-      </motion.div>
     </section>
   );
 }
@@ -145,6 +158,75 @@ export function AnimatedCommittee() {
               </div>
             </div>
             <p className="mt-4 text-body-sm text-ash">{a.mandate}.</p>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── Capabilities ─────────────────────────────────────────── */
+
+const CAPABILITIES = [
+  [
+    "Adversarial committee",
+    "Six specialist agents — Bull, Bear, Quant, Macro, Risk, and the Chair — debate every thesis. No rubber stamps.",
+  ],
+  [
+    "Live Alpaca execution",
+    "Verdicts don't sit in a doc. The Chair's ruling submits a bracket order to Alpaca paper — entry, stop, and target in one instruction.",
+  ],
+  [
+    "Universe scanner",
+    "The desk doesn't wait to be asked. A scanner sweeps the universe for setups worth convening the committee over.",
+  ],
+  [
+    "Scheduled runs",
+    "A market-hours-aware runner convenes the committee on a cadence and only when the tape is open — no weekend noise.",
+  ],
+  [
+    "Alerts",
+    "Stops, targets, and thesis-breaks raise alerts the moment price crosses the line the committee drew.",
+  ],
+  [
+    "Append-only ledger",
+    "Every ruling, order, and fill is written to an immutable ledger — a full audit trail from thesis to P&L.",
+  ],
+] as const;
+
+export function AnimatedCapabilities() {
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <section ref={ref} id="terminal" className="mx-auto max-w-[1200px] px-5 py-24">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5 }}
+        className="max-w-2xl"
+      >
+        <Eyebrow>The system</Eyebrow>
+        <h2 className="display mt-4 text-heading-lg text-bone sm:text-display">
+          A full desk, not a chatbot.
+        </h2>
+        <p className="mt-5 max-w-xl text-body text-ash">
+          AICOS runs the whole loop — from finding the idea to logging the fill —
+          the way a real investment desk does.
+        </p>
+      </motion.div>
+
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {CAPABILITIES.map(([title, body], i) => (
+          <motion.div
+            key={title}
+            initial={{ opacity: 0, y: 24 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.45, delay: 0.1 + i * 0.06 }}
+            className="rounded-cards bg-smoke p-8"
+          >
+            <p className="text-subheading text-bone">{title}</p>
+            <p className="mt-3 text-body-sm leading-relaxed text-ash">{body}</p>
           </motion.div>
         ))}
       </div>
