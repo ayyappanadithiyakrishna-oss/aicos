@@ -45,6 +45,9 @@ class OrderResult:
     qty: float | None
     order_type: str
     status: str
+    filled_qty: float | None = None
+    filled_avg_price: float | None = None
+    filled_at: str | None = None
 
 
 def _load_client() -> TradingClient:
@@ -109,6 +112,9 @@ class AlpacaPaperClient:
             qty=float(order.qty) if order.qty else None,
             order_type=order_type,
             status=str(order.status),
+            filled_qty=float(order.filled_qty) if order.filled_qty else None,
+            filled_avg_price=float(order.filled_avg_price) if order.filled_avg_price else None,
+            filled_at=order.filled_at.isoformat() if order.filled_at else None,
         )
 
     def get_position(self, ticker: str) -> PositionInfo | None:

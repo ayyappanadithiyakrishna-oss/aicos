@@ -1,3 +1,4 @@
+import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -10,10 +11,13 @@ from ledger.pending.store import PendingStore
 from ledger.positions.store import Position, PositionStore
 from ledger.transactions.store import Transaction, TransactionStore
 from orchestrator.committee.session import CommitteeResult, CommitteeSession
+from orchestrator.execution.alpaca_client import AlpacaPaperClient, OrderResult
 from orchestrator.sizing.sizer import PositionSizer, SizeResult
 
 if TYPE_CHECKING:
     from data.fetcher import DataFetcher, TickerData
+
+logger = logging.getLogger(__name__)
 
 # Signals that should open a position (when above threshold and no position held).
 _BUY_SIGNALS = {"buy"}
@@ -25,12 +29,13 @@ _EXIT_SIGNALS = {"sell", "reduce", "avoid"}
 @dataclass
 class WorkflowResult:
     committee_result: CommitteeResult
-    ledger_action: str        # "opened" | "closed" | "passed" | "hold"
+    ledger_action: str        # "opened" | "closed" | "passed" | "hold" | "failed"
     ledger_reasoning: str
     position: Position | None = None
     transaction: Transaction | None = None
     size_result: SizeResult | None = None   # populated on BUY; None otherwise
     ticker_data: "TickerData | None" = None  # raw pipeline data; None when fetcher not wired
+    order_result: OrderResult | None = None  # Alpaca fill data; None when no execution
 
 
 class InvestmentReviewWorkflow:
@@ -43,6 +48,7 @@ class InvestmentReviewWorkflow:
         settings: Settings | None = None,
         fetcher: "DataFetcher | None" = None,
         pending_store: PendingStore | None = None,
+        alpaca: AlpacaPaperClient | None = None,
     ):
         self.session = session
         self.decision_store = decision_store
@@ -52,6 +58,7 @@ class InvestmentReviewWorkflow:
         self._sizer = PositionSizer()
         self._fetcher = fetcher  # when set, auto-populates AgentContext from the pipeline
         self._pending_store = pending_store  # when set, actionable decisions queue instead of auto-execute
+        self._alpaca = alpaca  # when set, executes via Alpaca paper trading
 
     def run(
         self,
@@ -81,6 +88,34 @@ class InvestmentReviewWorkflow:
         # ── Determine ledger action ──────────────────────────────────────────
         price = self._extract_price(data)
         action, reasoning, position, tx, size_result = self._evaluate(result, price)
+
+        # ── Execute via Alpaca when wired and action is open/close ───────────
+        order_result: OrderResult | None = None
+        if self._alpaca is not None and action in ("opened", "closed"):
+            side = "buy" if action == "opened" else "sell"
+            notional = size_result.notional if size_result else (position.shares * price if position and price else 0)
+            try:
+                order_result = self._alpaca.submit_order(
+                    ticker=result.ticker,
+                    side=side,
+                    notional=round(notional, 2),
+                )
+                # Reconcile with actual fill data
+                position, tx = self._reconcile_with_fill(
+                    action, order_result, result, position, tx, size_result, price
+                )
+            except Exception as exc:
+                logger.error(
+                    "Alpaca order failed for %s %s: %s", side.upper(), result.ticker, exc
+                )
+                action = "failed"
+                reasoning = (
+                    f"FAILED — Alpaca order rejected: {exc}. "
+                    f"Original action: {side.upper()} {result.ticker}. "
+                    f"No position or transaction recorded."
+                )
+                position = None
+                tx = None
 
         # ── Persist: decision first (append-only), then position/tx or pending ──
         self.decision_store.record(
@@ -117,6 +152,7 @@ class InvestmentReviewWorkflow:
             transaction=tx,
             size_result=size_result,
             ticker_data=ticker_data,
+            order_result=order_result,
         )
 
     # ── Threshold + sizing logic ─────────────────────────────────────────────
@@ -282,6 +318,47 @@ class InvestmentReviewWorkflow:
             f"signal {signal.upper()}. No position change warranted."
         )
         return "hold", reasoning, None, None, None
+
+    def _reconcile_with_fill(
+        self,
+        action: str,
+        order: OrderResult,
+        result: CommitteeResult,
+        position: Position | None,
+        tx: Transaction | None,
+        size_result: SizeResult | None,
+        requested_price: float | None,
+    ) -> tuple[Position | None, Transaction | None]:
+        """Replace requested values with actual fill data from Alpaca."""
+        fill_price = order.filled_avg_price or requested_price or 0.0
+        fill_qty = order.filled_qty or (size_result.shares if size_result else 0.0)
+        fill_ts = order.filled_at or result.timestamp.astimezone(timezone.utc).isoformat()
+
+        if action == "opened" and position is not None:
+            position = Position(
+                ticker=position.ticker,
+                shares=fill_qty,
+                avg_cost=fill_price,
+                opened_at=fill_ts,
+                status="open",
+                target_notional=fill_qty * fill_price,
+                size_pct=position.size_pct,
+                size_tier=position.size_tier,
+            )
+
+        if tx is not None:
+            tx = Transaction(
+                id=tx.id,
+                ticker=tx.ticker,
+                action=tx.action,
+                shares=fill_qty,
+                price=fill_price,
+                timestamp=fill_ts,
+                decision_ref=tx.decision_ref,
+                notes=tx.notes + f" [Alpaca fill: {fill_qty:.4f} @ ${fill_price:.2f}, order {order.order_id}]",
+            )
+
+        return position, tx
 
     def _current_portfolio_value(self) -> float:
         """Compute current portfolio value in USD.
