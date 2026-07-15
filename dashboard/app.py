@@ -36,6 +36,7 @@ from ledger.decisions.store import DecisionStore
 from ledger.pending.store import PendingStore
 from ledger.positions.store import Position, PositionStore
 from ledger.transactions.store import Transaction, TransactionStore
+from orchestrator.execution.alpaca_client import AlpacaPaperClient, AlpacaConfigError
 from orchestrator.sizing.sizer import PositionSizer
 from markupsafe import escape
 
@@ -47,6 +48,12 @@ _POSITIONS   = PositionStore()
 _TXS         = TransactionStore()
 _PENDING     = PendingStore()
 _SIZER       = PositionSizer()
+
+_ALPACA: AlpacaPaperClient | None = None
+try:
+    _ALPACA = AlpacaPaperClient()
+except AlpacaConfigError:
+    pass
 
 
 # ── Agent metadata ────────────────────────────────────────────────────────────
@@ -126,6 +133,41 @@ def _portfolio_cash() -> tuple[float, float]:
     cash = paper + cf
     open_cost = sum(p.avg_cost * p.shares for p in _POSITIONS.all_open())
     return cash + open_cost, cash
+
+
+_RECON_TOLERANCE_ABS = 1.00   # $1
+_RECON_TOLERANCE_PCT = 0.001  # 0.1%
+
+
+def _alpaca_recon_warning(local_equity: float) -> str:
+    """Return a warning banner HTML string if Alpaca equity diverges from local ledger."""
+    if _ALPACA is None:
+        return ""
+    try:
+        acct = _ALPACA.get_account()
+    except Exception:
+        return ""
+
+    alpaca_eq = acct.equity
+    diff = abs(alpaca_eq - local_equity)
+    ref = max(abs(alpaca_eq), abs(local_equity), 1.0)
+    pct_diff = diff / ref
+
+    if diff <= _RECON_TOLERANCE_ABS and pct_diff <= _RECON_TOLERANCE_PCT:
+        return ""
+
+    return f"""
+<div style="background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.35);
+            border-radius:8px;padding:12px 16px;margin-bottom:16px;
+            font-size:13px;color:var(--txt1);display:flex;align-items:center;gap:10px">
+  <span style="font-size:18px">⚠</span>
+  <div>
+    <strong>Ledger / Alpaca drift detected</strong><br>
+    Local ledger equity: <span class="mono">${local_equity:,.2f}</span> &nbsp;·&nbsp;
+    Alpaca paper equity: <span class="mono">${alpaca_eq:,.2f}</span> &nbsp;·&nbsp;
+    Diff: <span class="mono">${diff:,.2f}</span> ({pct_diff:.2%})
+  </div>
+</div>"""
 
 
 def _load_watchlist() -> list[str]:
@@ -1377,12 +1419,14 @@ def overview() -> Response:
     else:
         table = '<div class="tbl-wrap"><div class="empty">No open positions.</div></div>'
 
+    recon_banner = _alpaca_recon_warning(portfolio_val)
+
     body = f"""
 <div class="page-hdr">
   <div class="page-title">Portfolio Overview</div>
   <div class="page-sub">Read-only · prices from local cache · no live API calls</div>
 </div>
-{stat_bar}{table}"""
+{recon_banner}{stat_bar}{table}"""
     return _page("Overview", "/", body)
 
 
