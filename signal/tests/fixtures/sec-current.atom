@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+<title>Latest Filings - Thu, 15 Oct 2026 10:00:00 EDT</title>
+<entry>
+<title>8-K - Halcyon Semiconductor Inc (0009000001) (Filer)</title>
+<link rel="alternate" type="text/html" href="https://www.sec.gov/Archives/edgar/data/9000001/000900000126000188/0009000001-26-000188-index.htm"/>
+<summary type="html"> &lt;b&gt;Filed:&lt;/b&gt; 2026-10-15 &lt;b&gt;AccNo:&lt;/b&gt; 0009000001-26-000188 &lt;b&gt;Size:&lt;/b&gt; 2 MB&lt;br&gt;Item 2.02: Results of Operations and Financial Condition&lt;br&gt;Item 9.01: Financial Statements and Exhibits</summary>
+<updated>2026-10-15T16:07:12-04:00</updated>
+<category scheme="https://www.sec.gov/" label="form type" term="8-K"/>
+<id>urn:tag:sec.gov,2008:accession-number=0009000001-26-000188</id>
+</entry>
+<entry>
+<title>8-K - Malformed entry without cik</title>
+<summary type="html">nothing</summary>
+<updated>not-a-date</updated>
+</entry>
+<entry>
+<title>8-K/A - Polestone Networks Inc (0009000006) (Filer)</title>
+<link rel="alternate" type="text/html" href="https://www.sec.gov/Archives/edgar/data/9000006/x-index.htm"/>
+<summary type="html"> &lt;b&gt;Filed:&lt;/b&gt; 2026-10-15 &lt;b&gt;AccNo:&lt;/b&gt; 0009000006-26-000104 &lt;b&gt;Size:&lt;/b&gt; 40 KB&lt;br&gt;Item 1.05: Material Cybersecurity Incidents</summary>
+<updated>2026-10-15T09:00:00-04:00</updated>
+<category scheme="https://www.sec.gov/" label="form type" term="8-K/A"/>
+</entry>
+</feed>
