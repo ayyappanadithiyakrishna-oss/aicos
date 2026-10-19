@@ -19,6 +19,7 @@ describe("live recovery and source classification", () => {
   it("does not turn unrelated excerpt mentions into a CNBC catalyst", () => {
     const record = { ...demoArticles()[0]!, structured: undefined, sourceId: "cnbc", title: "Alberta has enormous oil reserves and sends crude exports to the US", excerpt: "Related coverage: crude exports and oil supply." };
     expect(classify(record).subtype).toBe("other.unclassified");
+    expect(classify({ ...record, sourceId: "massive-news" }).subtype).toBe("other.unclassified");
     expect(classify({ ...record, title: "Top Wall Street analysts are bullish on these stocks", excerpt: "Oil prices rally" }).subtype).toBe("other.unclassified");
     expect(classify({ ...record, title: "Nasdaq futures gain as investors buy the dip", excerpt: "" }).subtype).toBe("market.equities");
   });

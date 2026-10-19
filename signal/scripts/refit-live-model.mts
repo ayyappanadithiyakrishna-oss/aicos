@@ -5,7 +5,7 @@ const target = new URL("../src/lib/live/model.json", import.meta.url);
 const previous = JSON.parse(readFileSync(target, "utf8"));
 const examples: TrainingExample[] = JSON.parse(readFileSync(new URL(".cache/resolved-examples.json", import.meta.url), "utf8"));
 const model = trainModel(examples, {
-  version: previous.model.version,
+  version: `erm-holdout-v2-${new Date().toISOString().slice(0, 19).replace("T", "-").replaceAll(":", "")}`,
   trainedAt: new Date().toISOString(),
   trainingCutoff: previous.model.trainingCutoff,
   calibrationEnd: previous.model.calibrationEnd,

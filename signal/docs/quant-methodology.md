@@ -22,7 +22,7 @@
    [2 %, 96 %] after normalization via affine shrinkage. An untouched chronological holdout C
    judges both interval coverage and post-isotonic probabilities. Requirements: ≥150 unique
    calibration events, ≥30 unique holdout events, coverage within 0.80 ± 0.07, maximum class ECE
-   ≤0.12, and multiclass Brier no worse than training climatology +0.01. Group support must also
+   ≤0.12, and multiclass Brier no worse than training climatology. Group support must also
    be n ≥25. Calibration A/B/C use the first 50%, next 25%, final 25% of the calibration period.
 5. **Splits are chronological and purged**: an example is used in a split only if its outcome window
    ends before the next boundary (no leakage across train/calibration/test).

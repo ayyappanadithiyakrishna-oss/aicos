@@ -160,7 +160,7 @@ const calibrationEnd = new Date(Date.parse(lastAt) + 1).toISOString();
 // Time-ordered split: the earliest 70% of events train the prior, the latest 30% calibrate intervals/probabilities.
 const trainingCutoff = sorted[Math.floor(sorted.length * 0.7)]?.at ?? lastAt;
 const model = trainModel(sorted, {
-  version: `erm-holdout-v2-${now.toISOString().slice(0, 10)}`,
+  version: `erm-holdout-v2-${now.toISOString().slice(0, 19).replace("T", "-").replaceAll(":", "")}`,
   trainedAt: now.toISOString(),
   trainingCutoff,
   calibrationEnd,

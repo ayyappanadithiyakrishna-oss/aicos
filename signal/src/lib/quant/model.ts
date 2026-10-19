@@ -157,7 +157,7 @@ export function trainHorizonModel(
   const eventCount = new Set(held.map((e) => e.eventId)).size;
   const enough = new Set(cal.map((e) => e.eventId)).size >= MIN_CALIBRATION_N && eventCount >= MIN_HOLDOUT_EVENTS;
   const coverageOk = calibrationCoverage !== null && Math.abs(calibrationCoverage - INTERVAL_LEVEL) <= COVERAGE_TOLERANCE;
-  const probabilityOk = calibrationEce !== null && calibrationEce <= MAX_HOLDOUT_ECE && brier !== null && climatologyBrier !== null && brier <= climatologyBrier + 0.01;
+  const probabilityOk = calibrationEce !== null && calibrationEce <= MAX_HOLDOUT_ECE && brier !== null && climatologyBrier !== null && brier <= climatologyBrier;
   const calibrated = Boolean(enough && coverageOk && probabilityOk && isotonic && conformal);
   const calibrationNote = `${calA.length} interval-fit / ${calB.length} probability-fit / ${held.length} untouched holdout reactions (${eventCount} events). ` +
     (!enough ? "Insufficient independent holdout events; probabilities withheld." : !coverageOk ? "Holdout interval coverage outside tolerance; probabilities withheld." : !probabilityOk ? "Holdout probability calibration or baseline check failed; probabilities withheld." : "Passed independent holdout coverage, calibration and baseline checks.");
