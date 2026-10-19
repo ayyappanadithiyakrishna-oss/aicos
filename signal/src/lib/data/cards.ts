@@ -145,7 +145,7 @@ export function toCard(e: IntelligenceEvent): CardModel {
     firstPublishedAt: e.firstPublishedAt,
     updatedAt: e.updatedAt,
     ingestedAt: e.ingestedAt,
-    sourceName: e.primarySourceName,
+    sourceName: primary?.publisher ?? e.primarySourceName,
     sourceKind: e.primarySourceKind,
     confirmation: e.confirmationStatus,
     originalTitle: e.originalTitle,

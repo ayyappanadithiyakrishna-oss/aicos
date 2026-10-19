@@ -3,6 +3,9 @@
  * It is a market-priced magnitude (no direction). Only computed from an entitled, fresh chain.
  */
 
+import { lastCloseAtOrBefore, sessionOn } from "@/lib/calendar/nyse";
+import { dateKeyOf } from "@/lib/calendar/time";
+
 export interface OptionsInput {
   spot: number;
   /** Annualized implied volatility (decimal), e.g. 0.32. */
@@ -61,7 +64,7 @@ export function impliedMoveFromStraddle(
   if (!inp.entitled) return { available: false, reason: "Options data present but not entitled for display." };
   if (now.getTime() - Date.parse(inp.asOf) > MAX_IV_AGE_MS) return { available: false, reason: "Option quotes are stale." };
   const straddle = inp.callMid + inp.putMid; // per-share premium (quotes are per share; multiplier documents contract size)
-  const moveAbs = 0.8 * straddle;
+  const moveAbs = straddle;
   return {
     available: true,
     method: "atm_straddle",
@@ -69,7 +72,7 @@ export function impliedMoveFromStraddle(
     moveAbs,
     assumptions: [
       `ATM straddle mid ${straddle.toFixed(2)} per share (contract multiplier ${inp.multiplier})`,
-      "Expected absolute move ≈ 0.8 × straddle (normal approximation)",
+      "Expected absolute move ≈ ATM straddle premium (before fees; 1σ ≈ straddle / 0.80)",
       "Magnitude only — not a direction forecast",
     ],
     asOf: inp.asOf,
@@ -121,8 +124,14 @@ const MAX_EOD_AGE_DAYS = 5;
 /** End-of-day ATM straddle → implied move. Magnitude only; never a direction. */
 export function impliedMoveFromEodStraddle(inp: EodStraddleInput | null, now: Date): EodImpliedMove {
   if (!inp) return { available: false, reason: "No options data for this underlying." };
-  if (!(inp.spot > 0) || !(inp.callClose > 0) || !(inp.putClose > 0) || !(inp.tradingDays >= 1)) return { available: false, reason: "Missing option closes or spot price." };
-  if (now.getTime() - Date.parse(`${inp.optionsDate}T21:00:00Z`) > MAX_EOD_AGE_DAYS * 86_400_000) return { available: false, reason: "Option closes are stale." };
+  if (![inp.spot, inp.strike, inp.callClose, inp.putClose, inp.tradingDays].every(Number.isFinite) || !(inp.spot > 0) || !(inp.callClose > 0) || !(inp.putClose > 0) || !(inp.tradingDays >= 1)) return { available: false, reason: "Missing option closes or spot price." };
+  const session = sessionOn(inp.optionsDate);
+  const spotTime = Date.parse(inp.spotAsOf);
+  if (!session || !Number.isFinite(spotTime) || !/^\d{4}-\d{2}-\d{2}$/.test(inp.expiry) || !Number.isFinite(Date.parse(inp.expiry))) return { available: false, reason: "Invalid option or spot date." };
+  if (session.close.getTime() > now.getTime() || spotTime > now.getTime()) return { available: false, reason: "Option or spot data is future-dated." };
+  if (dateKeyOf(new Date(spotTime)) !== inp.optionsDate) return { available: false, reason: "Spot and option closes are from different sessions." };
+  if (inp.expiry <= inp.optionsDate || inp.expiry < dateKeyOf(now)) return { available: false, reason: "Option contracts have expired." };
+  if (now.getTime() - session.close.getTime() > MAX_EOD_AGE_DAYS * 86_400_000 || lastCloseAtOrBefore(now).date !== inp.optionsDate) return { available: false, reason: "Option closes are stale." };
   if (Math.abs(inp.strike - inp.spot) / inp.spot > 0.05) return { available: false, reason: "No near-the-money strike available." };
   const straddle = inp.callClose + inp.putClose;
   const sigmaT = straddle / (SQRT_2_OVER_PI * inp.spot);

@@ -11,7 +11,8 @@
  *   up: y > +0.5   down: y < −0.5   neutral: |y| ≤ 0.5
  */
 import type { Horizon, Probabilities } from "@/lib/domain/types";
-import { CLASSES, type ClassKey, fitIsotonic, normalizeProbabilities, predictIsotonic, reliabilityBins, type IsotonicModel } from "./calibration";
+import { CLASSES, type ClassKey, fitIsotonic, normalizeProbabilities, predictIsotonic, reliabilityBins, brierMulticlass, type IsotonicModel } from "./calibration";
+import { horizonWindow } from "@/lib/calendar/horizons";
 import { conformalInterval, empiricalCoverage, fitConformal, type ConformalCalibration } from "./intervals";
 import { fitHierarchicalPrior, predictPrior, selectLambda, type HierarchicalPrior, type PriorObservation } from "./priors";
 
@@ -21,6 +22,8 @@ export const MIN_CALIBRATION_N = 150;
 export const COVERAGE_TOLERANCE = 0.07;
 export const PROBABILITY_FLOOR = 0.02;
 export const PROBABILITY_CEIL = 0.96;
+export const MAX_HOLDOUT_ECE = 0.12;
+export const MIN_HOLDOUT_EVENTS = 30;
 
 export interface TrainingExample {
   eventId: string;
@@ -36,6 +39,8 @@ export interface TrainingExample {
   sector: string;
   eventKind: string;
   regime: string;
+  /** Actual outcome maturity; examples crossing a split boundary are purged. */
+  windowEnd?: string;
 }
 
 export interface HorizonModel {
@@ -51,6 +56,15 @@ export interface HorizonModel {
   calibrationEce: number | null;
   calibrated: boolean;
   calibrationNote: string;
+  validation?: {
+    method: "chronological-held-out-v1";
+    from: string;
+    n: number;
+    eventCount: number;
+    ece: number | null;
+    brier: number | null;
+    climatologyBrier: number | null;
+  };
 }
 
 export interface EventReactionModel {
@@ -94,59 +108,59 @@ export function trainHorizonModel(
 ): HorizonModel | null {
   const cut = Date.parse(trainingCutoff);
   const calEnd = Date.parse(calibrationEnd);
+  const endOf = (e: TrainingExample) => Date.parse(e.windowEnd ?? horizonWindow(new Date(e.at), e.horizon).end.toISOString());
   const clean = examples
-    .filter((e) => e.horizon === horizon && !e.overlapping && e.sigmaHPct > 0)
+    .filter((e) => e.horizon === horizon && !e.overlapping && Number.isFinite(e.sigmaHPct) && e.sigmaHPct > 0 && Number.isFinite(e.arPct))
     .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
-  const train = clean.filter((e) => Date.parse(e.at) < cut);
-  const cal = clean.filter((e) => Date.parse(e.at) >= cut && Date.parse(e.at) < calEnd);
+  const train = clean.filter((e) => Date.parse(e.at) < cut && endOf(e) < cut);
+  const cal = clean.filter((e) => Date.parse(e.at) >= cut && Date.parse(e.at) < calEnd && endOf(e) < calEnd);
   if (train.length < 40) return null;
 
-  const split = Math.floor(train.length * 0.8);
-  const { lambda, mse } = selectLambda(toObs(train.slice(0, split)), toObs(train.slice(split)));
+  // Validation and all calibration splits are chronological; an event timestamp never straddles
+  // splits, and no outcome is allowed to mature into the next split.
+  const validationAt = Date.parse(train[Math.floor(train.length * 0.8)]!.at);
+  const { lambda, mse } = selectLambda(toObs(train.filter((e) => endOf(e) < validationAt)), toObs(train.filter((e) => Date.parse(e.at) >= validationAt)));
   const prior = fitHierarchicalPrior(toObs(train), lambda);
-
-  const calA: TrainingExample[] = [];
-  const calB: TrainingExample[] = [];
-  cal.forEach((e, i) => (i % 2 === 0 ? calA : calB).push(e));
+  const fitAt = cal[Math.floor(cal.length * 0.5)]?.at ?? calibrationEnd;
+  const holdoutAt = cal[Math.floor(cal.length * 0.75)]?.at ?? calibrationEnd;
+  const calA = cal.filter((e) => Date.parse(e.at) < Date.parse(fitAt) && endOf(e) < Date.parse(fitAt));
+  const calB = cal.filter((e) => Date.parse(e.at) >= Date.parse(fitAt) && Date.parse(e.at) < Date.parse(holdoutAt) && endOf(e) < Date.parse(holdoutAt));
+  const held = cal.filter((e) => Date.parse(e.at) >= Date.parse(holdoutAt));
 
   const residualsA = calA.map((e) => e.arPct / e.sigmaHPct - predictPrior(prior, e.path).mu);
   const conformal = fitConformal(residualsA, INTERVAL_LEVEL);
-
   let isotonic: Record<ClassKey, IsotonicModel> | null = null;
   let calibrationCoverage: number | null = null;
   let calibrationEce: number | null = null;
-  if (conformal && calB.length >= 20) {
-    const raw = calB.map((e) => {
-      const yHat = predictPrior(prior, e.path).mu;
-      return { p: rawClassProbabilities(yHat, residualsA), y: classOf(e.arPct / e.sigmaHPct), yHat, yReal: e.arPct / e.sigmaHPct };
-    });
+  let brier: number | null = null;
+  let climatologyBrier: number | null = null;
+  if (conformal && calB.length >= 20 && held.length >= 20) {
+    const fit = calB.map((e) => ({ p: rawClassProbabilities(predictPrior(prior, e.path).mu, residualsA), y: classOf(e.arPct / e.sigmaHPct) }));
     isotonic = {} as Record<ClassKey, IsotonicModel>;
-    for (const k of CLASSES) {
-      isotonic[k] = fitIsotonic(
-        raw.map((r) => r.p[k]),
-        raw.map((r) => (r.y === k ? 1 : 0)),
-      );
-    }
-    calibrationCoverage = empiricalCoverage(
-      raw.map((r) => {
-        const [lo, hi] = conformalInterval(r.yHat, conformal);
-        return { lo, hi, y: r.yReal };
-      }),
-    );
-    calibrationEce = reliabilityBins(
-      raw.map((r) => r.p.up),
-      raw.map((r) => (r.y === "up" ? 1 : 0)),
-    ).ece;
+    for (const k of CLASSES) isotonic[k] = fitIsotonic(fit.map((r) => r.p[k]), fit.map((r) => r.y === k ? 1 : 0));
+    const evaluated = held.map((e) => {
+      const yHat = predictPrior(prior, e.path).mu;
+      const raw = rawClassProbabilities(yHat, residualsA);
+      const p = calibratedProbabilities(raw, isotonic!);
+      return { p, y: classOf(e.arPct / e.sigmaHPct), yHat, yReal: e.arPct / e.sigmaHPct };
+    });
+    calibrationCoverage = empiricalCoverage(evaluated.map((r) => {
+      const [lo, hi] = conformalInterval(r.yHat, conformal);
+      return { lo, hi, y: r.yReal };
+    }));
+    // Post-calibration ECE on untouched examples, across all three classes.
+    calibrationEce = Math.max(...CLASSES.map((k) => reliabilityBins(evaluated.map((r) => r.p[k]), evaluated.map((r) => r.y === k ? 1 : 0)).ece ?? 1));
+    brier = brierMulticlass(evaluated);
+    const base = Object.fromEntries(CLASSES.map((k) => [k, train.filter((e) => classOf(e.arPct / e.sigmaHPct) === k).length / train.length])) as Record<ClassKey, number>;
+    climatologyBrier = brierMulticlass(evaluated.map((r) => ({ p: base, y: r.y })));
   }
-
-  const enough = cal.length >= MIN_CALIBRATION_N;
+  const eventCount = new Set(held.map((e) => e.eventId)).size;
+  const enough = new Set(cal.map((e) => e.eventId)).size >= MIN_CALIBRATION_N && eventCount >= MIN_HOLDOUT_EVENTS;
   const coverageOk = calibrationCoverage !== null && Math.abs(calibrationCoverage - INTERVAL_LEVEL) <= COVERAGE_TOLERANCE;
-  const calibrated = Boolean(enough && coverageOk && isotonic && conformal);
-  const calibrationNote = !enough
-    ? `Calibration sample ${cal.length} < ${MIN_CALIBRATION_N}; probabilities withheld.`
-    : !coverageOk
-      ? `Calibration-split interval coverage ${(calibrationCoverage ?? 0).toFixed(2)} outside ${INTERVAL_LEVEL}±${COVERAGE_TOLERANCE}.`
-      : `Calibrated on ${cal.length} clean events (${calA.length} residual / ${calB.length} isotonic).`;
+  const probabilityOk = calibrationEce !== null && calibrationEce <= MAX_HOLDOUT_ECE && brier !== null && climatologyBrier !== null && brier <= climatologyBrier + 0.01;
+  const calibrated = Boolean(enough && coverageOk && probabilityOk && isotonic && conformal);
+  const calibrationNote = `${calA.length} interval-fit / ${calB.length} probability-fit / ${held.length} untouched holdout reactions (${eventCount} events). ` +
+    (!enough ? "Insufficient independent holdout events; probabilities withheld." : !coverageOk ? "Holdout interval coverage outside tolerance; probabilities withheld." : !probabilityOk ? "Holdout probability calibration or baseline check failed; probabilities withheld." : "Passed independent holdout coverage, calibration and baseline checks.");
 
   return {
     horizon,
@@ -161,6 +175,7 @@ export function trainHorizonModel(
     calibrationEce,
     calibrated,
     calibrationNote,
+    validation: { method: "chronological-held-out-v1", from: holdoutAt, n: held.length, eventCount, ece: calibrationEce, brier, climatologyBrier },
   };
 }
 
@@ -197,6 +212,14 @@ export interface ModelPrediction {
   calibrated: boolean;
 }
 
+function calibratedProbabilities(raw: Record<ClassKey, number>, isotonic: Record<ClassKey, IsotonicModel>): Probabilities {
+  const n = normalizeProbabilities({ up: Math.max(0, predictIsotonic(isotonic.up, raw.up)), down: Math.max(0, predictIsotonic(isotonic.down, raw.down)), neutral: Math.max(0, predictIsotonic(isotonic.neutral, raw.neutral)) });
+  // A convex mixture with the uniform distribution preserves both the sum and the 2% floor.
+  // Clipping BEFORE normalization did not: a 2% class could end up below 2% after division.
+  const scale = 1 - CLASSES.length * PROBABILITY_FLOOR;
+  return { up: PROBABILITY_FLOOR + scale * n.up, down: PROBABILITY_FLOOR + scale * n.down, neutral: PROBABILITY_FLOOR + scale * n.neutral };
+}
+
 export function predict(model: HorizonModel, path: readonly string[], sigmaHPct: number): ModelPrediction {
   const p = predictPrior(model.prior, path);
   const centralPct = p.mu * sigmaHPct;
@@ -204,14 +227,7 @@ export function predict(model: HorizonModel, path: readonly string[], sigmaHPct:
   let probabilities: Probabilities | null = null;
   if (model.calibrated && model.isotonic) {
     const raw = rawClassProbabilities(p.mu, model.residualsA);
-    // Shrink away from 0/1: a finite calibration sample cannot justify certainty.
-    const clip = (x: number) => Math.min(PROBABILITY_CEIL, Math.max(PROBABILITY_FLOOR, x));
-    const cal = {
-      up: clip(predictIsotonic(model.isotonic.up, raw.up)),
-      down: clip(predictIsotonic(model.isotonic.down, raw.down)),
-      neutral: clip(predictIsotonic(model.isotonic.neutral, raw.neutral)),
-    };
-    probabilities = normalizeProbabilities(cal);
+    probabilities = calibratedProbabilities(raw, model.isotonic);
   }
   return {
     yHat: p.mu,

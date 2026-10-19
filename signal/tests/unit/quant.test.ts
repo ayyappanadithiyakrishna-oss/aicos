@@ -124,7 +124,7 @@ describe("options-implied move is a separate, gated quantity", () => {
   });
   it("straddle approximation documents its conventions", () => {
     const m = impliedMoveFromStraddle({ spot: 100, callMid: 2, putMid: 2, multiplier: 100, asOf: "2026-10-14T18:29:00Z", expiry: "2026-10-16", source: "x", entitled: true }, now);
-    expect(m.available && m.movePct).toBeCloseTo(3.2, 10);
+    expect(m.available && m.movePct).toBeCloseTo(4, 10);
     expect(m.available && m.assumptions.join(" ")).toContain("not a direction forecast");
   });
 });

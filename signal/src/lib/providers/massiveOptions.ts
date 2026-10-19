@@ -7,38 +7,31 @@ import "server-only";
 import { z } from "zod";
 import { impliedMoveFromEodStraddle, type EodImpliedMove } from "@/lib/quant/options";
 import { providerJson } from "./http";
+import { tradingDaysBetween } from "@/lib/calendar/nyse";
+import { dateKeyOf } from "@/lib/calendar/time";
 
 const RATE = 5 / 60;
 const Contracts = z.object({ results: z.array(z.object({ ticker: z.string(), expiration_date: z.string(), strike_price: z.number(), contract_type: z.string() })).optional() });
 const Prev = z.object({ results: z.array(z.object({ c: z.number(), t: z.number() })).optional() });
 
-function tradingDaysBetween(fromDate: string, toDate: string): number {
-  let n = 0;
-  const d = new Date(`${fromDate}T12:00:00Z`);
-  const end = Date.parse(`${toDate}T12:00:00Z`);
-  while (d.getTime() < end) {
-    d.setUTCDate(d.getUTCDate() + 1);
-    const wd = d.getUTCDay();
-    if (wd !== 0 && wd !== 6) n++;
-  }
-  return Math.max(1, n);
-}
-
-const cache = new Map<string, { at: number; p: Promise<EodImpliedMove> }>();
+const cache = new Map<string, { at: number; ttl: number; p: Promise<EodImpliedMove> }>();
 
 export function massiveImpliedMove(apiKey: string, ticker: string, spot: { price: number; at: string }, now = new Date()): Promise<EodImpliedMove> {
-  const key = ticker.toUpperCase();
+  const symbol = ticker.toUpperCase();
+  const key = `${symbol}|${spot.at}`;
   const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < 6 * 3_600_000) return hit.p;
-  const p = compute(apiKey, key, spot, now).catch((e): EodImpliedMove => ({ available: false, reason: e instanceof Error && /429|rate/i.test(e.message) ? "Options data rate-limited (5 requests/min); try again shortly." : "Options data unavailable for this underlying." }));
-  cache.set(key, { at: Date.now(), p });
+  if (hit && Date.now() - hit.at < hit.ttl) return hit.p;
+  const p = compute(apiKey, symbol, spot, now).catch((e): EodImpliedMove => ({ available: false, reason: e instanceof Error && /429|rate/i.test(e.message) ? "Options data rate-limited (5 requests/min); try again shortly." : "Options data unavailable for this underlying." }));
+  const entry = { at: Date.now(), ttl: 6 * 3_600_000, p };
+  cache.set(key, entry);
+  void p.then((v) => { if (!v.available) entry.ttl = 60_000; });
   return p;
 }
 
 async function compute(apiKey: string, ticker: string, spot: { price: number; at: string }, now: Date): Promise<EodImpliedMove> {
   const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
   const q = new URLSearchParams({
-    underlying_ticker: ticker.replace(".", ""),
+    underlying_ticker: ticker,
     "expiration_date.gte": day(now.getTime() + 3 * 86_400_000),
     "expiration_date.lte": day(now.getTime() + 24 * 86_400_000),
     "strike_price.gte": (spot.price * 0.96).toFixed(2),
@@ -62,7 +55,8 @@ async function compute(apiKey: string, ticker: string, spot: { price: number; at
   const cb = await prev(call);
   const pb = await prev(put);
   if (!cb || !pb) return { available: false, reason: "No previous-session trades for the ATM contracts." };
-  const optionsDate = day(Math.max(cb.t, pb.t));
+  const optionsDate = dateKeyOf(new Date(cb.t));
+  if (optionsDate !== dateKeyOf(new Date(pb.t))) return { available: false, reason: "Call and put last traded on different sessions; a combined straddle would be misleading." };
   return impliedMoveFromEodStraddle(
     { spot: spot.price, spotAsOf: spot.at, strike, callClose: cb.c, putClose: pb.c, optionsDate, expiry, tradingDays: tradingDaysBetween(optionsDate, expiry), contracts: { call, put }, source: "Massive options (end-of-day)" },
     now,

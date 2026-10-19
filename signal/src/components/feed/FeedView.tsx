@@ -3,7 +3,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import clsx from "clsx";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, List, Rows3 } from "lucide-react";
 import type { CardModel } from "@/lib/data/cards";
 import type { Horizon } from "@/lib/domain/types";
 import { useClientState } from "@/lib/client/store";
@@ -33,7 +33,7 @@ export function FeedView({ initial, asOf }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
-  const [state] = useClientState();
+  const [state, update] = useClientState();
   const [result, setResult] = useState<{ key: string; data: Props["initial"] }>({ key: "initial", data: initial });
   const [error, setError] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -96,10 +96,10 @@ export function FeedView({ initial, asOf }: Props) {
     if (!data.nextCursor) return;
     setLoadingMore(true);
     try {
-      const r = await fetch(`/api/feed?${paramsToQuery(new URLSearchParams(sp.toString()), state.watchlist)}&cursor=${encodeURIComponent(data.nextCursor)}`);
+      const r = await fetch(`/api/feed?${paramsToQuery(new URLSearchParams(sp.toString()), state.watchlist)}&cursor=${encodeURIComponent(data.nextCursor)}${state.settings.ranking === "watchlist" && watchKey ? `&prioritize=watchlist&watch=${encodeURIComponent(watchKey)}` : ""}`);
       if (!r.ok) throw new Error(`Feed request failed (${r.status})`);
       const next = (await r.json()) as Props["initial"];
-      setResult({ key: queryKey, data: { ...next, items: [...data.items, ...next.items] } });
+      setResult({ key: queryKey, data: { ...next, items: [...data.items, ...next.items.filter((n) => !data.items.some((o) => o.id === n.id))] } });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -131,7 +131,7 @@ export function FeedView({ initial, asOf }: Props) {
   }, [focus]);
 
   const activeFilters = useMemo(() => FILTER_KEYS.filter((k) => k !== "category" && k !== "q" && k !== "horizon" && sp.get(k)), [sp]);
-  const cats = [...data.categories, { key: "watchlist", label: "Your watchlist", count: state.watchlist.length }];
+  const cats = [...data.categories.filter((c) => c.count > 0 || c.key === "all" || c.key === "macro"), { key: "watchlist", label: "Your watchlist", count: state.watchlist.length }];
 
   return (
     <div>
@@ -184,7 +184,14 @@ export function FeedView({ initial, asOf }: Props) {
             <option value="relevance">Ranked by relevance</option>
             <option value="recency">Most recent</option>
           </select>
-          <span className="ml-auto text-2xs text-ink-3" aria-live="polite">
+          <div className="ml-auto inline-flex rounded-full bg-surface-3 p-0.5" role="group" aria-label="Feed density">
+            {(["comfortable", "compact"] as const).map((d) => (
+              <button key={d} type="button" aria-label={d === "compact" ? "Compact view" : "Detailed view"} aria-pressed={state.settings.density === d} title={d === "compact" ? "Compact view" : "Detailed view"} onClick={() => update((s) => ({ ...s, settings: { ...s.settings, density: d } }))} className={clsx("inline-flex size-8 cursor-pointer items-center justify-center rounded-full", state.settings.density === d ? "bg-surface text-ink shadow-sm" : "text-ink-2")}>
+                {d === "compact" ? <List className="size-4" /> : <Rows3 className="size-4" />}
+              </button>
+            ))}
+          </div>
+          <span className="text-2xs text-ink-3" aria-live="polite">
             {loading ? "Updating…" : `${data.total} event${data.total === 1 ? "" : "s"}`}
           </span>
         </div>
@@ -198,7 +205,7 @@ export function FeedView({ initial, asOf }: Props) {
 
       <div ref={listRef} className={clsx("flex flex-col gap-3 transition-opacity", loading && "opacity-60")}>
         {data.items.map((c, i) => (
-          <EventCard key={c.id} card={c} asOf={asOf} focused={i === focus} defaultHorizon={horizon} />
+          <EventCard key={c.id} card={c} asOf={asOf} focused={i === focus} defaultHorizon={horizon} compact={state.settings.density === "compact"} />
         ))}
       </div>
 

@@ -115,7 +115,12 @@ export async function runLiveIngest(opts: { now: Date; repo: Repository; trigger
   if (!anyLiveProvider(cfg)) return { ...base, reason: "No live provider is configured and entitled. Live mode shows an empty, labelled state — never synthetic data." };
   const slot = Math.floor(opts.now.getTime() / (5 * 60_000));
   const job = await opts.repo.startJob("ingest", `${opts.trigger}:${slot}`, startedAt);
-  if (!job.acquired) return { ...base, reason: "An ingest for this 5-minute slot already ran (idempotent skip)." };
+  if (!job.acquired) {
+    const previous = (await opts.repo.listJobs(25)).find((j) => j.id === job.id);
+    // Reuse the original outcome, never stamp a skipped attempt as a fresh successful ingest.
+    if (previous?.finishedAt && previous.detail && typeof previous.detail === "object" && "events" in previous.detail) return previous.detail as IngestReport;
+    return { ...base, reason: "A feed refresh is still running. Check again shortly." };
+  }
   try {
     const { records, fetched, errors } = await fetchLiveRecords(cfg, opts.now);
     const companies = await securities(cfg, errors);

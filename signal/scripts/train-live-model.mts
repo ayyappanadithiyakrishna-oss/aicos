@@ -90,11 +90,14 @@ const queue = [...tagged];
 await Promise.all(
   Array.from({ length: 2 }, async () => {
     for (let t = queue.shift(); t; t = queue.shift()) {
+      const file = new URL(`lse-bars-${encodeURIComponent(t)}.json`, CACHE);
+      if (existsSync(file)) { bars.set(t, JSON.parse(readFileSync(file, "utf8"))); continue; }
       const res = await fetch(`https://api.londonstrategicedge.com/vault/candles?symbol=${encodeURIComponent(t)}&timeframe=1d&start=2024-06-01&limit=5000`, { headers: { "x-api-key": LSE } });
       if (res.ok) {
         const rows = (await res.json()) as Array<{ ts: string; open: number; high: number; low: number; close: number; volume?: number }>;
         if (Array.isArray(rows)) bars.set(t, rows.map((b) => ({ t: new Date(closeUtc(b.ts.slice(0, 10))).toISOString(), o: b.open, h: b.high, l: b.low, c: b.close, v: b.volume ?? 0 })));
       }
+      if (bars.has(t)) writeFileSync(file, JSON.stringify(bars.get(t)));
       await sleep(320);
     }
   }),
@@ -134,6 +137,7 @@ for (let i = 0; i < ordered.length; i += BATCH) {
         eventId: x.eventId,
         securityId: x.securityId,
         at: x.at,
+        windowEnd: x.realization.windowEnd,
         horizon: x.horizon,
         path: x.path,
         sigmaHPct: x.sigmaHPct,
@@ -149,13 +153,14 @@ for (let i = 0; i < ordered.length; i += BATCH) {
 }
 
 // ---- 4. Fit
+writeFileSync(new URL("resolved-examples.json", CACHE), JSON.stringify(examples));
 const sorted = examples.sort((a, b) => a.at.localeCompare(b.at));
 const lastAt = sorted.at(-1)?.at ?? now.toISOString();
 const calibrationEnd = new Date(Date.parse(lastAt) + 1).toISOString();
 // Time-ordered split: the earliest 70% of events train the prior, the latest 30% calibrate intervals/probabilities.
 const trainingCutoff = sorted[Math.floor(sorted.length * 0.7)]?.at ?? lastAt;
 const model = trainModel(sorted, {
-  version: `erm-live-${now.toISOString().slice(0, 10)}`,
+  version: `erm-holdout-v2-${now.toISOString().slice(0, 10)}`,
   trainedAt: now.toISOString(),
   trainingCutoff,
   calibrationEnd,

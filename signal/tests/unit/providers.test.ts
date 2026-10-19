@@ -126,9 +126,10 @@ describe("live ingest under provider failure", () => {
     globalThis.fetch = (async () => new Response(fixture, { status: 200 })) as typeof fetch;
     try {
       const now = new Date("2026-10-15T15:01:00Z");
-      await runLiveIngest({ now, repo, trigger: "cron", cfg });
+      const first = await runLiveIngest({ now, repo, trigger: "cron", cfg });
       const second = await runLiveIngest({ now: new Date("2026-10-15T15:02:00Z"), repo, trigger: "cron", cfg });
-      expect(second.status).toBe("skipped");
+      expect(second).toEqual(first);
+      expect(await repo.listJobs(10)).toHaveLength(1);
     } finally {
       globalThis.fetch = realFetch;
     }

@@ -13,7 +13,9 @@ export const CATEGORIES: Array<{ key: string; label: string; match: (e: Intellig
   { key: "ma", label: "M&A", match: (e) => e.eventType === "ma" },
   { key: "regulation", label: "Regulation", match: (e) => e.eventType === "regulation" },
   { key: "geopolitics", label: "Geopolitics", match: (e) => e.eventType === "geopolitics" },
-  { key: "sector", label: "Sectors", match: (e) => e.eventType === "sector" || e.sectors.length > 0 },
+  { key: "sector", label: "Sectors", match: (e) => e.eventType === "sector" },
+  { key: "coverage", label: "Company coverage", match: (e) => e.subtype === "other.unclassified" },
+  { key: "catalysts", label: "Catalysts", match: (e) => e.subtype !== "other.unclassified" },
 ];
 
 export const FeedQuerySchema = z.object({
@@ -43,7 +45,7 @@ export const FeedQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 
-const CursorSchema = z.object({ o: z.number().int().min(0), a: z.string() });
+const CursorSchema = z.object({ o: z.number().int().min(0), a: z.string().datetime() });
 
 export function encodeCursor(offset: number, asOf: string): string {
   return Buffer.from(JSON.stringify({ o: offset, a: asOf })).toString("base64url");
@@ -88,21 +90,23 @@ export function matchesQuery(e: IntelligenceEvent, q: FeedQuery, asOf: Date): bo
 }
 
 export function queryFeed(events: readonly IntelligenceEvent[], q: FeedQuery, asOf: Date) {
-  let pool = events;
+  const cur = decodeCursor(q.cursor);
+  // Pin publication cutoff and recency to page one. The request clock changes on every live call.
+  const snapshot = cur && Date.parse(cur.a) <= asOf.getTime() ? new Date(cur.a) : asOf;
+  let pool = events.filter((e) => Date.parse(e.firstPublishedAt) <= snapshot.getTime());
   if (q.prioritize === "watchlist" && q.watch?.length) {
     // Re-rank with the watchlist weight boosted; the documented function is unchanged.
     const watch = new Set(q.watch);
-    pool = events.map((e) => ({ ...e, relevance: relevance(e, { now: asOf, watchlist: watch, prioritize: "watchlist" }) }));
+    pool = pool.map((e) => ({ ...e, relevance: relevance(e, { now: snapshot, watchlist: watch, prioritize: "watchlist" }) }));
   }
-  const filtered = pool.filter((e) => matchesQuery(e, q, asOf));
+  const filtered = pool.filter((e) => matchesQuery(e, q, snapshot));
   const sorted = [...filtered].sort((a, b) =>
-    q.sort === "recency" ? Date.parse(b.firstPublishedAt) - Date.parse(a.firstPublishedAt) : b.relevance.score - a.relevance.score,
+    q.sort === "recency" ? Date.parse(b.firstPublishedAt) - Date.parse(a.firstPublishedAt) : b.relevance.score - a.relevance.score || a.id.localeCompare(b.id),
   );
   const limit = q.limit ?? 25;
-  const cur = decodeCursor(q.cursor);
-  const offset = cur && cur.a === asOf.toISOString() ? cur.o : 0;
+  const offset = cur && snapshot.toISOString() === cur.a ? cur.o : 0;
   const page = sorted.slice(offset, offset + limit);
-  const nextCursor = offset + limit < sorted.length ? encodeCursor(offset + limit, asOf.toISOString()) : null;
+  const nextCursor = offset + limit < sorted.length ? encodeCursor(offset + limit, snapshot.toISOString()) : null;
   const categories = CATEGORIES.map((c) => ({ key: c.key, label: c.label, count: events.filter(c.match).length }));
   return { items: page, total: sorted.length, nextCursor, categories };
 }

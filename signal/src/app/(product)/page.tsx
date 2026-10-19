@@ -3,20 +3,18 @@ import { FeedView } from "@/components/feed/FeedView";
 import { RightRail } from "@/components/feed/RightRail";
 import { toCard } from "@/lib/data/cards";
 import { getCalendar, getFeed, getPulse } from "@/lib/data/service";
+import { Briefing } from "@/components/feed/Briefing";
 import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 
 export const revalidate = 60;
 
 export default async function FeedPage() {
-  const [feed, pulse, catalysts, all] = await Promise.all([getFeed({ limit: 30 }), getPulse(), getCalendar(), getFeed({ limit: 100 })]);
+  const [feed, pulse, catalysts, all] = await Promise.all([getFeed({ limit: 30 }), getPulse(), getCalendar(), getFeed({ limit: 1000 })]);
   const initial = { items: feed.items.map(toCard), total: feed.total, nextCursor: feed.nextCursor, categories: feed.categories };
   return (
     <div className="grid gap-5 min-[1380px]:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-[28px] font-semibold leading-tight">Today</h1>
-          <p className="text-xs text-ink-3">{feed.mode.mode === "live" ? "Live news, the assets it touches, and what the model will and won’t say." : "Synthetic demo world."}</p>
-        </div>
+        <Briefing events={all.items} mode={feed.mode} freshness={feed.freshness} />
         {feed.mode.mode === "live" && !feed.items.length ? (
           <div className="mb-4 rounded-lg border border-line bg-surface p-4 text-sm text-ink-2">
             <p className="font-medium text-ink">No live events yet.</p>

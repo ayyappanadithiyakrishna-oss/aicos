@@ -79,7 +79,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
           {t.coverage ? (
             <Panel className="p-4">
               <SectionTitle>Latest coverage</SectionTitle>
-              <Coverage coverage={t.coverage} sentiment={t.sentiment ?? null} asOf={t.mode.asOf} />
+              <Coverage ticker={s.ticker} coverage={t.coverage} sentiment={t.sentiment ?? null} asOf={t.mode.asOf} />
             </Panel>
           ) : null}
 
@@ -170,7 +170,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
             ) : (
               <p className="text-sm text-ink-3">No resolved forecasts for this asset.</p>
             )}
-            <p className="mt-2 text-2xs text-ink-3">Includes out-of-sample walk-forward forecasts{t.mode.mode === "demo" ? " on synthetic history" : ""}; misses are kept, never dropped.</p>
+            <p className="mt-2 text-2xs text-ink-3">{t.mode.mode === "demo" ? "Includes out-of-sample walk-forward forecasts on synthetic history" : "Frozen live forecasts, resolved separately when their outcome windows close"}; misses are kept, never dropped.</p>
           </Panel>
         </div>
 
@@ -203,15 +203,15 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
             </div>
             <p className="mt-1 text-2xs text-ink-3">{t.attention.note}</p>
           </Panel>
-          <Panel className="p-4">
+          {s.factorLoadings ? <Panel className="p-4">
             <SectionTitle>Scenario sensitivity (exploratory)</SectionTitle>
             <ScenarioSensitivity security={s} />
-          </Panel>
+          </Panel> : null}
           <Panel className="p-4">
             <SectionTitle>Options-implied move</SectionTitle>
             {t.mode.mode === "live" ? <ImpliedMovePanel ticker={s.ticker} modelSessionSigmaPct={t.sessionSigmaPct ?? null} /> : <p className="text-xs text-ink-3">{t.options.reason}</p>}
           </Panel>
-          <Panel className="p-4" aria-labelledby="relationships">
+          {t.relationships.length ? <Panel className="p-4" aria-labelledby="relationships">
             <SectionTitle id="relationships">Documented relationships</SectionTitle>
             {t.relationships.length ? (
               <ul className="space-y-2 text-xs">
@@ -232,7 +232,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
             ) : (
               <p className="text-xs text-ink-3">No documented supplier/customer/competitor data for this asset. SIGNAL does not infer relationships.</p>
             )}
-          </Panel>
+          </Panel> : null}
           {t.memberships.length || t.holdings.length ? (
             <Panel className="p-4" aria-labelledby="exposures">
               <SectionTitle id="exposures">{t.holdings.length ? "Holdings" : "Index / ETF membership"}</SectionTitle>
@@ -251,7 +251,8 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
           ) : null}
           {t.peers.length ? (
             <Panel className="p-4">
-              <SectionTitle>Peers</SectionTitle>
+              <SectionTitle>{s.isSynthetic ? "Peers" : "Same industry"}</SectionTitle>
+              {!s.isSynthetic ? <p className="mb-2 text-xs text-ink-3">{s.industry} · largest covered companies in this industry.</p> : null}
               <div className="flex flex-wrap gap-1.5">
                 {t.peers.map((p) => (
                   <Link key={p} href={`/ticker/${p}`} className="inline-flex items-center gap-1.5 rounded-md border border-line px-2 py-1 font-mono text-xs hover:border-line-2">

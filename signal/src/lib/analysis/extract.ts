@@ -104,9 +104,13 @@ export function classify(record: RawRecord): { type: EventType; subtype: string;
   if (s?.deal) return { type: "ma", subtype: "ma.announced", why: "structured deal payload" };
   // Aggregator news is mostly commentary: classify on the headline, and treat opinion formats as such.
   const aggregated = AGGREGATOR_SOURCES.has(record.sourceId);
-  if (aggregated && COMMENTARY.test(record.title)) return { type: "other", subtype: "other.unclassified", why: "commentary / opinion headline" };
-  const text = aggregated ? record.title : `${record.title} ${record.excerpt}`;
-  for (const r of KEYWORD_RULES) if (r.re.test(text)) return { type: r.type, subtype: r.subtype, why: `keyword: ${r.re.source.slice(0, 40)}` };
+  if ((aggregated || record.sourceId === "cnbc") && (COMMENTARY.test(record.title) || /where we[’']re|finding opportunities|what to expect|week ahead|our (picks|favorite|favourite)|top wall street analysts|smartest buys|stocks? to buy/i.test(record.title))) return { type: "other", subtype: "other.unclassified", why: "commentary / opinion headline" };
+  const text = (aggregated || record.sourceId === "cnbc") ? record.title : `${record.title} ${record.excerpt}`;
+  for (const r of KEYWORD_RULES) {
+    // Short RSS summaries frequently describe trade flows without announcing a disruption.
+    if (record.sourceId === "cnbc" && r.subtype === "geopolitics.oil_supply" && !/\b(disrupt\w*|outage|shutdown|attack\w*|cuts?|halt\w*|block\w*|tighten\w*|shortage|suspend\w*)\b/i.test(text)) continue;
+    if (r.re.test(text)) return { type: r.type, subtype: r.subtype, why: `keyword: ${r.re.source.slice(0, 40)}` };
+  }
   return { type: "other", subtype: "other.unclassified", why: "no rule matched" };
 }
 

@@ -11,6 +11,18 @@ test.describe("intelligence feed", () => {
     await expect(cards.first()).toContainText("Exposed assets");
   });
 
+  test("compact reading mode persists and can expand a story", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Market briefing", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Compact view", exact: true }).click();
+    const card = page.locator("article[data-card-id]").first();
+    await expect(card.getByText(/^Exposed assets/)).not.toBeVisible();
+    await card.getByRole("button", { name: "View mechanics" }).click();
+    await expect(card.getByText(/^Exposed assets/)).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Compact view", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
+
   test("category and search filters narrow the feed and can be cleared", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("tab", { name: /^Macro/ }).click();

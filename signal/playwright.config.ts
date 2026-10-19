@@ -5,6 +5,7 @@ const PORT = Number(process.env.E2E_PORT ?? 3107);
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: true,
+  workers: 2,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
   // First renders of each route after a cold start can exceed the 5 s default under parallel load.

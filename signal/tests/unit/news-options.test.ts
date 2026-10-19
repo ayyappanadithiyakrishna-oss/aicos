@@ -46,7 +46,7 @@ describe("news adapters", () => {
 });
 
 describe("end-of-day straddle implied move", () => {
-  const base = { spot: 100, spotAsOf: at, strike: 100, callClose: 2, putClose: 2, optionsDate: "2026-10-16", expiry: "2026-10-30", tradingDays: 10, contracts: { call: "C", put: "P" }, source: "test" };
+  const base = { spot: 100, spotAsOf: "2026-10-16T20:00:00Z", strike: 100, callClose: 2, putClose: 2, optionsDate: "2026-10-16", expiry: "2026-10-30", tradingDays: 10, contracts: { call: "C", put: "P" }, source: "test" };
   it("derives expected move, per-session sigma and annualized IV", () => {
     const m = impliedMoveFromEodStraddle(base, new Date(at));
     expect(m.available).toBe(true);
@@ -55,6 +55,17 @@ describe("end-of-day straddle implied move", () => {
     // σ_T = 4 / (0.7979 × 100) = 5.013%; per session = σ_T / √10
     expect(m.sessionSigmaPct).toBeCloseTo(5.0133 / Math.sqrt(10), 3);
     expect(m.ivAnnualPct).toBeCloseTo(m.sessionSigmaPct * Math.sqrt(252), 6);
+  });
+  it("rejects mixed-session spot, expired contracts, future data and non-finite prices", () => {
+    expect(impliedMoveFromEodStraddle({ ...base, spotAsOf: "2026-10-15T20:00:00Z" }, new Date(at)).available).toBe(false);
+    expect(impliedMoveFromEodStraddle({ ...base, expiry: "2026-10-16" }, new Date(at)).available).toBe(false);
+    expect(impliedMoveFromEodStraddle({ ...base, spot: Infinity }, new Date(at)).available).toBe(false);
+    expect(impliedMoveFromEodStraddle({ ...base, optionsDate: "2026-10-20", spotAsOf: "2026-10-20T20:00:00Z" }, new Date(at)).available).toBe(false);
+  });
+  it("rejects previous-week closes after a new regular session has closed", () => {
+    const r = impliedMoveFromEodStraddle(base, new Date("2026-10-19T22:00:00Z"));
+    expect(r.available).toBe(false);
+    if (!r.available) expect(r.reason).toMatch(/stale/);
   });
   it("refuses stale closes and far-from-the-money strikes", () => {
     expect(impliedMoveFromEodStraddle({ ...base, optionsDate: "2026-10-01" }, new Date(at)).available).toBe(false);

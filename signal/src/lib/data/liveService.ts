@@ -17,16 +17,26 @@ import { blsReleases } from "@/lib/providers/free";
 import { calendarAt, lseUsCalendar, parseFigure, type LseCalendarRow } from "@/lib/providers/lse";
 import { liveMaster, runLiveIngest, type IngestReport } from "@/lib/live/jobs";
 import { LivePriceStore } from "@/lib/live/prices";
+import { tickerCoverage } from "./coverage";
 import { massiveLatestNews } from "@/lib/providers/news";
 import { LIVE_MODEL, LIVE_MODEL_TRAINING } from "@/lib/live/model";
+import { UNIVERSE } from "@/lib/live/universe";
 import { LIVE_PROXIES } from "@/lib/live/master";
 import { anyLiveProvider, liveConfig, liveProviderViews, priceProvider } from "@/lib/live/registry";
 import { decodeCursor, encodeCursor, queryFeed } from "./feedQuery";
 import type { ArchiveQuery, ArchiveView, CalendarItem, FeedQuery, FeedResult, MacroRow, MarketPulseView, ModeInfo, PulseRibbonItem, ScorecardView, SearchHit, StatusView, TickerView, EarningsRow, FilingRow } from "./views";
 
-let lastReport: IngestReport | null = null;
-let lastRunAt = 0;
-let inflight: Promise<IngestReport> | null = null;
+// Share refresh coordination across route bundles and development module reloads.
+// The repository is the key, so a new store can never inherit another store's freshness.
+type RefreshState = { lastReport: IngestReport | null; lastRunAt: number; inflight: Promise<IngestReport> | null };
+const refreshGlobal = globalThis as typeof globalThis & { signalRefresh?: WeakMap<object, RefreshState> };
+const refreshStates = refreshGlobal.signalRefresh ??= new WeakMap<object, RefreshState>();
+function refreshState(): RefreshState {
+  const repo = getRepository();
+  let state = refreshStates.get(repo);
+  if (!state) { state = { lastReport: null, lastRunAt: 0, inflight: null }; refreshStates.set(repo, state); }
+  return state;
+}
 
 function modeInfo(now: Date): ModeInfo {
   const cfg = liveConfig();
@@ -45,39 +55,41 @@ function modeInfo(now: Date): ModeInfo {
 /** On-demand refresh only for the ephemeral store; with Postgres, cron owns ingestion. */
 export async function ensureFresh(now = new Date()): Promise<IngestReport | null> {
   const repo = getRepository();
-  if (repo.kind !== "memory") return lastReport;
-  const ttl = Number(process.env.LIVE_REFRESH_SECONDS ?? 300) * 1000;
-  if (now.getTime() - lastRunAt < ttl && lastReport) return lastReport;
-  const run = !inflight;
-  if (!inflight) {
-    inflight = runLiveIngest({ now, repo, trigger: "on_demand" })
+  const state = refreshState();
+  if (repo.kind !== "memory") return state.lastReport;
+  const ttl = state.lastReport?.status === "failed" || state.lastReport?.status === "skipped" ? 30_000 : Number(process.env.LIVE_REFRESH_SECONDS ?? 300) * 1000;
+  if (now.getTime() - state.lastRunAt < ttl && state.lastReport) return state.lastReport;
+  const run = !state.inflight;
+  if (!state.inflight) {
+    state.inflight = runLiveIngest({ now, repo, trigger: "on_demand" })
       .then((r) => {
-        lastReport = r;
-        lastRunAt = Date.now();
+        state.lastReport = r;
+        state.lastRunAt = Date.now();
         return r;
       })
       .finally(() => {
-        inflight = null;
+        state.inflight = null;
       });
   }
   // Stale-while-revalidate: once this instance has data, serve it and refresh after the response.
-  if (lastReport) {
+  if (state.lastReport) {
     if (run) {
-      const job = inflight;
+      const job = state.inflight;
       try {
         after(() => job);
       } catch {
         /* outside a request scope: the promise simply runs */
       }
     }
-    return lastReport;
+    return state.lastReport;
   }
-  return inflight;
+  return state.inflight;
 }
 
 export function recordReport(r: IngestReport) {
-  lastReport = r;
-  lastRunAt = Date.now();
+  const state = refreshState();
+  state.lastReport = r;
+  state.lastRunAt = Date.now();
 }
 
 async function events(): Promise<IntelligenceEvent[]> {
@@ -88,6 +100,7 @@ async function events(): Promise<IntelligenceEvent[]> {
 export async function liveFeed(q: FeedQuery): Promise<FeedResult> {
   const now = new Date();
   const evs = await events();
+  const lastReport = refreshState().lastReport;
   const lags = lastReport?.ingestLagMinutes ?? [];
   const newest = evs.reduce<string | null>((m, e) => (!m || e.firstPublishedAt > m ? e.firstPublishedAt : m), null);
   return {
@@ -98,7 +111,7 @@ export async function liveFeed(q: FeedQuery): Promise<FeedResult> {
       newestItemAt: newest,
       ingestLagP50Min: lags.length ? Math.round(quantile(lags, 0.5) * 10) / 10 : null,
       ingestLagP95Min: lags.length ? Math.round(quantile(lags, 0.95) * 10) / 10 : null,
-      stale: lastReport ? now.getTime() - Date.parse(lastReport.finishedAt) > 30 * 60_000 : true,
+      stale: !evs.length || (lastReport ? now.getTime() - Date.parse(lastReport.finishedAt) > 30 * 60_000 : true),
       note: lastReport?.reason ?? (lastReport ? "Measured from provider publication to ingestion." : "No ingestion has run on this instance yet."),
     },
   };
@@ -163,16 +176,12 @@ export async function liveTicker(symbol: string): Promise<TickerView | null> {
         new Promise<[]>((r) => setTimeout(() => r([]), 4000)),
       ])
     : [];
-  const coverage = news.map((n) => {
-    const s = n.vendorSentiment?.find((x) => x.ticker === sec.ticker) ?? null;
-    return { title: n.title, url: n.url, publisher: n.publisher, publishedAt: n.publishedAt ?? n.fetchedAt, sentiment: s?.score ?? null, note: s?.note ?? "" };
-  });
-  const scored = coverage.filter((c) => c.sentiment !== null);
+  const { coverage, sentiment } = tickerCoverage(news, sec.ticker);
   return {
     mode: modeInfo(now),
     sessionSigmaPct,
     coverage,
-    sentiment: scored.length ? { mean: Math.round((scored.reduce((x, c) => x + c.sentiment!, 0) / scored.length) * 100) / 100, n: scored.length, positive: scored.filter((c) => c.sentiment! > 0).length, negative: scored.filter((c) => c.sentiment! < 0).length } : null,
+    sentiment,
     security: sec,
     quote: { securityId: sec.id, ticker: sec.ticker, last: last?.c ?? null, changePct: last && prev ? Math.round(logReturnPct(prev.c, last.c) * 100) / 100 : null, asOf: last?.t ?? null, entitlement: last ? "delayed" : "none", delayMinutes: null, source: prices.source },
     daily: daily.slice(-260),
@@ -182,7 +191,7 @@ export async function liveTicker(symbol: string): Promise<TickerView | null> {
     impactHistory: fs.slice(0, 40).map((f) => {
       const r = rz.get(f.id);
       const ar = r?.status === "resolved" ? r.abnormalReturnPct : null;
-      return { forecastId: f.id, eventId: f.eventId, eventTitle: evs.find((e) => e.id === f.eventId)?.originalTitle ?? f.eventId, generatedAt: f.forecastGeneratedAt, horizon: f.horizon, central: f.centralMovePct, lo: f.intervalLowPct, hi: f.intervalHighPct, direction: f.direction, qualityTier: f.qualityTier, realizedAr: ar, status: r?.status ?? "pending", hit: ar === null || f.centralMovePct === null ? null : Math.sign(ar) === Math.sign(f.centralMovePct), inside: null, sample: "live" };
+      return { forecastId: f.id, eventId: f.eventId, eventTitle: evs.find((e) => e.id === f.eventId)?.originalTitle ?? f.eventId, generatedAt: f.forecastGeneratedAt, horizon: f.horizon, central: f.centralMovePct, lo: f.intervalLowPct, hi: f.intervalHighPct, direction: f.direction, qualityTier: f.qualityTier, realizedAr: ar, status: r?.status ?? "pending", hit: ar === null || f.centralMovePct === null ? null : Math.sign(ar) === Math.sign(f.centralMovePct), inside: ar !== null && f.intervalLowPct !== null && f.intervalHighPct !== null ? ar >= f.intervalLowPct && ar <= f.intervalHighPct : null, sample: "live" };
     }),
     relationships: [],
     memberships: [],
@@ -194,12 +203,12 @@ export async function liveTicker(symbol: string): Promise<TickerView | null> {
       const recent = coverage.filter((c) => now.getTime() - Date.parse(c.publishedAt) <= wk).length;
       const prior = coverage.filter((c) => now.getTime() - Date.parse(c.publishedAt) > wk).length;
       return coverage.length
-        ? { recent, baseline: prior, ratio: prior > 0 ? Math.round((recent / prior) * 10) / 10 : null, note: "Tagged articles in the last 7 days vs the 7 days before (Massive news; capped at the 25 latest)." }
+        ? { recent, baseline: news.length >= 25 ? null : prior, ratio: news.length < 25 && prior > 0 ? Math.round((recent / prior) * 10) / 10 : null, note: news.length >= 25 ? "Latest coverage is capped at 25 articles. A week-over-week ratio needs complete windows and is withheld." : "Tagged articles in the last 7 days vs the preceding 7 days (Massive news)." }
         : { recent: evs.length, baseline: null, ratio: null, note: "No tagged coverage available right now." };
     })(),
     trajectory: fs.slice(0, 24).reverse().map((f) => ({ at: f.forecastGeneratedAt, eventId: f.eventId, direction: f.direction, central: f.centralMovePct, tier: f.qualityTier })),
     options: { available: false, reason: "No entitled options data source configured." },
-    peers: [],
+    peers: sec.industry !== "Unclassified" ? UNIVERSE.filter((p) => p.ticker !== sec.ticker && p.industry === sec.industry).slice(0, 6).map((p) => p.ticker) : [],
   };
 }
 
@@ -434,7 +443,9 @@ export async function liveArchive(q: ArchiveQuery): Promise<ArchiveView> {
   const rz = await repo.realizationsFor(fs.map((f) => f.id));
   const limit = q.limit ?? 50;
   const cur = decodeCursor(q.cursor);
-  const asOf = "live";
+  const now = new Date().toISOString();
+  const asOf = cur && cur.a <= now ? cur.a : now;
+  fs = fs.filter((f) => f.forecastGeneratedAt <= asOf);
   const offset = cur && cur.a === asOf ? cur.o : 0;
   const evs = new Map((await repo.listEvents(500)).map((e) => [e.id, e] as const));
   return {
@@ -451,6 +462,7 @@ export async function liveStatus(): Promise<StatusView> {
   const repo = getRepository();
   const feed = await liveFeed({ limit: 1 });
   const jobs = await repo.listJobs(10);
+  const lastReport = refreshState().lastReport;
   return {
     mode: modeInfo(now),
     providers: liveProviderViews(liveConfig()),

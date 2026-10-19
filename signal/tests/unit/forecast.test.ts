@@ -12,10 +12,10 @@ function synthModel() {
   const rng = mulberry32(42);
   const ex: TrainingExample[] = [];
   const start = Date.parse("2024-01-02T15:00:00Z");
-  for (let i = 0; i < 1600; i++) {
+  for (let i = 0; i < 6400; i++) {
     const pos = i % 2 === 0;
     const y = (pos ? 0.8 : -0.8) + normal(rng);
-    const at = new Date(start + i * 12 * 3_600_000).toISOString();
+    const at = new Date(start + i * 3 * 3_600_000).toISOString();
     ex.push({ eventId: `e${i}`, securityId: "s", at, horizon: "next_session", path: ["t.x", `t.x|direct:${pos ? "positive" : "negative"}`, `t.x|direct:${pos ? "positive" : "negative"}|large`], sigmaHPct: 2, arPct: y * 2, overlapping: false, sector: "x", eventKind: "t", regime: "normal" });
   }
   return trainModel(ex, { version: "test", trainedAt: "2026-01-01T00:00:00Z", trainingCutoff: "2025-06-01T00:00:00Z", calibrationEnd: "2026-01-01T00:00:00Z", isSynthetic: true, horizons: ["next_session"] });

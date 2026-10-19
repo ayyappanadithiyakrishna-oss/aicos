@@ -4,36 +4,37 @@ import type { EodImpliedMove } from "@/lib/quant/options";
 
 type Payload = EodImpliedMove & { ticker?: string; spot?: number };
 
-const cache = new Map<string, Promise<Payload>>();
+const cache = new Map<string, { at: number; ttl: number; p: Promise<Payload> }>();
 function load(ticker: string): Promise<Payload> {
-  let p = cache.get(ticker);
-  if (!p) {
-    p = fetch(`/api/options/${encodeURIComponent(ticker)}`)
-      .then((r) => r.json() as Promise<Payload>)
-      .catch(() => ({ available: false as const, reason: "Options data could not be loaded." }));
-    cache.set(ticker, p);
-  }
+  const hit = cache.get(ticker);
+  if (hit && Date.now() - hit.at < hit.ttl) return hit.p;
+  const p = fetch(`/api/options/${encodeURIComponent(ticker)}`)
+    .then(async (r): Promise<Payload> => r.ok ? r.json() : { available: false, reason: "Options data could not be loaded. Try again shortly." })
+    .catch((): Payload => ({ available: false, reason: "Options data could not be loaded." }));
+  const entry = { at: Date.now(), ttl: 6 * 3_600_000, p };
+  cache.set(ticker, entry);
+  void p.then((v) => { if (!v.available) entry.ttl = 60_000; });
   return p;
 }
 
 export function useImpliedMove(ticker: string, enabled = true) {
-  const [data, setData] = useState<Payload | null>(null);
+  const [result, setResult] = useState<{ ticker: string; data: Payload } | null>(null);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     if (!enabled) return;
     let live = true;
-    load(ticker).then((d) => live && setData(d));
-    return () => {
-      live = false;
-    };
-  }, [ticker, enabled]);
-  return data;
+    load(ticker).then((data) => { if (live) setResult({ ticker, data }); });
+    return () => { live = false; };
+  }, [ticker, enabled, attempt]);
+  const retry = () => { cache.delete(ticker); setResult(null); setAttempt((a) => a + 1); };
+  return { data: result?.ticker === ticker ? result.data : null, retry };
 }
 
 const fmt = (n: number, dp = 2) => n.toFixed(dp);
 
 /** Ticker cockpit panel: market-priced magnitude from the ATM straddle, compared with the model view. */
 export function ImpliedMovePanel({ ticker, modelSessionSigmaPct }: { ticker: string; modelSessionSigmaPct: number | null }) {
-  const d = useImpliedMove(ticker);
+  const { data: d, retry } = useImpliedMove(ticker);
   if (!d) {
     return (
       <div aria-busy="true" className="space-y-2">
@@ -43,7 +44,7 @@ export function ImpliedMovePanel({ ticker, modelSessionSigmaPct }: { ticker: str
       </div>
     );
   }
-  if (!d.available) return <p className="text-xs text-ink-3">{d.reason}</p>;
+  if (!d.available) return <div><p className="text-xs text-ink-3">{d.reason}</p><button type="button" onClick={retry} className="mt-2 cursor-pointer text-xs text-accent underline underline-offset-2">Retry options data</button></div>;
   const ratio = modelSessionSigmaPct && modelSessionSigmaPct > 0 ? d.sessionSigmaPct / modelSessionSigmaPct : null;
   return (
     <div>
@@ -79,7 +80,7 @@ export function ImpliedMovePanel({ ticker, modelSessionSigmaPct }: { ticker: str
 
 /** One line for popovers: loads only when rendered (i.e. when the popover opens). */
 export function ImpliedLine({ ticker, centralPct }: { ticker: string; centralPct: number | null }) {
-  const d = useImpliedMove(ticker);
+  const { data: d } = useImpliedMove(ticker);
   if (!d || !d.available) return null;
   const vs = centralPct !== null ? Math.abs(centralPct) / d.sessionSigmaPct : null;
   return (

@@ -48,7 +48,7 @@ export function KeyStats({ daily, sessionSigmaPct, articles, sentiment }: { dail
       </Cell>
       <Cell label="Volume vs 20-day avg">{relVol !== null ? `${relVol.toFixed(2)}×` : "—"}</Cell>
       <Cell label="Daily volatility (60d)">{sessionSigmaPct !== null ? `${sessionSigmaPct.toFixed(2)}%` : "—"}</Cell>
-      <Cell label="News · 14 days" sub={sentiment ? `net tone ${sentiment.mean > 0 ? "+" : ""}${sentiment.mean.toFixed(2)}` : undefined}>
+      <Cell label="Latest news · up to 25" sub={sentiment ? `net tone ${sentiment.mean > 0 ? "+" : ""}${sentiment.mean.toFixed(2)}` : undefined}>
         {articles ?? "—"}
       </Cell>
     </dl>

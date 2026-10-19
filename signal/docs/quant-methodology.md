@@ -19,8 +19,11 @@
    corrected), rescaled by σ_h. Coverage is measured, not assumed.
 4. **Class probabilities** with fixed bands — up `y > +0.5`, down `y < −0.5`, else "no material move" —
    from the residual distribution, then **isotonic-calibrated** on calibration split B, floored to
-   [2 %, 96 %] and renormalized. Shown only when the horizon passes calibration (n ≥ 150 and coverage
-   within 0.80 ± 0.07) **and** the group has n ≥ 25.
+   [2 %, 96 %] after normalization via affine shrinkage. An untouched chronological holdout C
+   judges both interval coverage and post-isotonic probabilities. Requirements: ≥150 unique
+   calibration events, ≥30 unique holdout events, coverage within 0.80 ± 0.07, maximum class ECE
+   ≤0.12, and multiclass Brier no worse than training climatology +0.01. Group support must also
+   be n ≥25. Calibration A/B/C use the first 50%, next 25%, final 25% of the calibration period.
 5. **Splits are chronological and purged**: an example is used in a split only if its outcome window
    ends before the next boundary (no leakage across train/calibration/test).
 
@@ -55,3 +58,14 @@ improvement over climatology. These figures only demonstrate that the machinery 
 * **Priced-in**: pre-event drift, observed move since publication, and modeled remaining move are
   separate; remaining move is "not estimable" without a model conditioned on realized prices.
 * **Market Pulse** shows observed moves and hypothesis links — no additive causal waterfall.
+
+## Live audit (2026-10-18)
+
+The previous artifact evaluated calibration on fitting examples. It has been replaced by a
+chronological holdout model, with outcome windows purged at every boundary. Both live horizons
+currently fail the baseline probability gate, so numeric probabilities are withheld. This is
+historical validation, not evidence of profitable trading or a verified live track record.
+Current-universe selection introduces survivorship bias; reactions within the same market regime
+can be correlated, and daily data limits timing precision. Provider-reported options closes must
+match the underlying session and the latest completed NYSE session. Missing data is never replaced
+by a made-up implied move. Live feed storage remains ephemeral without DATABASE_URL.

@@ -9,6 +9,7 @@ import { CONFIRMATION_LABEL, HORIZON_LONG, HORIZON_SHORT, signedPct, stampET, re
 import { useClientState } from "@/lib/client/store";
 import { Chip, DemoChip } from "@/components/ui/primitives";
 import { ImpactRail } from "@/components/impact/ImpactRail";
+import { Monogram } from "@/components/ui/SecurityMark";
 import { ExposureTable } from "@/components/impact/ExposureTable";
 
 const TYPE_ICON = {
@@ -52,7 +53,7 @@ export function HorizonToggle({ value, onChange, id }: { value: Horizon; onChang
   );
 }
 
-export function EventCard({ card, asOf, focused, defaultHorizon = "next_session" }: { card: CardModel; asOf: string; focused?: boolean; defaultHorizon?: Horizon }) {
+export function EventCard({ card, asOf, focused, defaultHorizon = "next_session", compact = false }: { card: CardModel; asOf: string; focused?: boolean; defaultHorizon?: Horizon; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [horizon, setHorizon] = useState<Horizon>(defaultHorizon);
   const [copied, setCopied] = useState(false);
@@ -61,14 +62,15 @@ export function EventCard({ card, asOf, focused, defaultHorizon = "next_session"
   const Icon = TYPE_ICON[card.eventType];
   const pi = card.pricedIn;
   // Generic company news has no mechanism worth leading with: show the real headline first.
-  const headlineFirst = card.subtype === "other.unclassified" || card.subtype.startsWith("market.") || (card.subtype.startsWith("macro.") && !card.macro);
+  const headlineFirst = !card.isSynthetic || card.subtype === "other.unclassified" || card.subtype.startsWith("market.") || (card.subtype.startsWith("macro.") && !card.macro);
   const hasAssets = card.exposures.length > 0;
-  const genericLine = card.bottomLine.startsWith("A report") || card.bottomLine.startsWith("A market-wide report") || (card.subtype.startsWith("macro.") && !card.macro);
+  const summarize = compact || card.subtype === "other.unclassified";
+  const genericLine = card.subtype === "other.unclassified" || card.bottomLine.startsWith("A report") || card.bottomLine.startsWith("A market-wide report") || (card.subtype.startsWith("macro.") && !card.macro);
   const facts = headlineFirst ? card.facts.filter((f) => !f.text.startsWith(card.originalTitle.slice(0, 40))) : card.facts;
   const echo = card.novelty;
 
   const toggleSave = () =>
-    update((s) => ({ ...s, bookmarks: saved ? s.bookmarks.filter((b) => b.id !== card.id) : [{ id: card.id, title: card.bottomLine, at: new Date().toISOString() }, ...s.bookmarks].slice(0, 200) }));
+    update((s) => ({ ...s, bookmarks: saved ? s.bookmarks.filter((b) => b.id !== card.id) : [{ id: card.id, title: headlineFirst ? card.originalTitle : card.bottomLine, at: new Date().toISOString() }, ...s.bookmarks].slice(0, 200) }));
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/events/${card.id}`);
@@ -119,7 +121,7 @@ export function EventCard({ card, asOf, focused, defaultHorizon = "next_session"
         {headlineFirst && !genericLine ? <p className="mt-1 max-w-[70ch] text-sm text-ink-2">{card.bottomLine}</p> : null}
 
         {/* Facts */}
-        {facts.length ? (
+        {(!summarize || open) && facts.length ? (
           <ul className="mt-2 space-y-0.5">
             {facts.map((f, i) => (
               <li key={i} className="flex gap-2 text-sm text-ink-2">
@@ -142,7 +144,7 @@ export function EventCard({ card, asOf, focused, defaultHorizon = "next_session"
             ))}
           </ul>
         ) : null}
-        {card.macro ? (
+        {(!summarize || open) && card.macro ? (
           <p className="mt-1.5 text-2xs text-ink-3">
             {card.macro.surprise !== null ? (
               <>
@@ -156,7 +158,7 @@ export function EventCard({ card, asOf, focused, defaultHorizon = "next_session"
         ) : null}
 
         {/* Transmission */}
-        {hasAssets && card.transmission.length ? (
+        {(!summarize || open) && hasAssets && card.transmission.length ? (
           <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink-3" aria-label="Transmission mechanism">
             {card.transmission.map((t, i) => (
               <span key={i} className="inline-flex items-center gap-1.5">
@@ -168,7 +170,7 @@ export function EventCard({ card, asOf, focused, defaultHorizon = "next_session"
         ) : null}
 
         {/* Impact rail */}
-        {hasAssets ? (
+        {hasAssets && (!summarize || open) ? (
           <div className="mt-2.5 rounded-xl bg-surface-2 p-2.5">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-medium text-ink-2">Exposed assets <span className="font-normal text-ink-3">· model view</span></span>
@@ -178,9 +180,17 @@ export function EventCard({ card, asOf, focused, defaultHorizon = "next_session"
           </div>
         ) : null}
 
+        {summarize && !open && hasAssets ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {card.exposures.slice(0, 5).map((x) => (
+              <Link key={x.securityId} href={`/ticker/${x.ticker}`} className="press inline-flex min-h-7 items-center gap-1 rounded-full bg-surface-2 px-2 text-xs text-ink-2 hover:text-accent">
+                <Monogram ticker={x.ticker} size={16} /><span className="font-medium">{x.ticker}</span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
         <div className="mt-2 flex flex-wrap items-center gap-x-2 text-2xs text-ink-3">
-          <span title="Event-quality indicator — not a model confidence.">Evidence quality <span className="num text-ink-2">{card.quality}</span></span>
-          <span aria-hidden>·</span>
+          {card.subtype !== "other.unclassified" ? <><span title="Quality of the available evidence, not predictive confidence.">Evidence quality <span className="num text-ink-2">{card.quality}</span></span><span aria-hidden>·</span></> : null}
           <span>{echo.originalCount + echo.echoCount} report{echo.originalCount + echo.echoCount === 1 ? "" : "s"}</span>
           {!hasAssets ? (
             <>
