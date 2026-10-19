@@ -16,6 +16,7 @@ import { PointInTimeView, trailingBeta, trailingDailyVol } from "@/lib/quant/fea
 import { fetchCompanyTickers, fetchCurrentFilings, filingToRecord } from "@/lib/providers/sec";
 import { FRED_SERIES, latestRelease, releaseToRecord } from "@/lib/providers/fred";
 import { fmpLatestNews, massiveNews } from "@/lib/providers/vendors";
+import { RSS_FEEDS, fetchRss, gdeltNews, nasdaqDirectory } from "@/lib/providers/free";
 import { buildLiveMaster, LIVE_PROXIES } from "./master";
 import { LivePriceStore } from "./prices";
 import { anyLiveProvider, liveConfig, liveSources, type LiveConfig } from "./registry";
@@ -38,7 +39,18 @@ export interface IngestReport {
 let masterCache: { at: number; companies: Security[] } | null = null;
 
 async function securities(cfg: LiveConfig, errors: IngestReport["errors"]): Promise<Security[]> {
-  if (!cfg.secUa) return [];
+  if (!cfg.secUa) {
+    if (!cfg.free) return [];
+    if (masterCache && Date.now() - masterCache.at < 24 * 3_600_000) return masterCache.companies;
+    try {
+      const companies = await nasdaqDirectory();
+      masterCache = { at: Date.now(), companies };
+      return companies;
+    } catch (e) {
+      errors.push({ provider: "nasdaqtrader", error: e instanceof Error ? e.message : String(e) });
+      return masterCache?.companies ?? [];
+    }
+  }
   if (masterCache && Date.now() - masterCache.at < 24 * 3_600_000) return masterCache.companies;
   try {
     const companies = await fetchCompanyTickers(cfg.secUa);
@@ -72,23 +84,32 @@ export async function fetchLiveRecords(cfg: LiveConfig, now: Date): Promise<{ re
       })(),
     ]);
   }
+  if (cfg.free) {
+    for (const f of RSS_FEEDS) tasks.push([f.id, fetchRss(f, fetchedAt)]);
+    tasks.push(["gdelt", gdeltNews(fetchedAt)]);
+  }
   if (cfg.fmpKey && cfg.fmpDisplay) tasks.push(["fmp", fmpLatestNews(cfg.fmpKey, fetchedAt)]);
   if (cfg.massiveKey && cfg.massiveDisplay) tasks.push(["massive", massiveNews(cfg.massiveKey, fetchedAt)]);
   const settled = await Promise.allSettled(tasks.map(([, p]) => p));
   const records: RawRecord[] = [];
+  const horizonMs = 4 * 86_400_000;
   const fetched: Record<string, number> = {};
   const errors: IngestReport["errors"] = [];
   settled.forEach((s, i) => {
     const name = tasks[i]![0];
     if (s.status === "fulfilled") {
-      records.push(...s.value);
-      fetched[name] = s.value.length;
+      const recent = s.value.filter((r) => !r.publishedAt || now.getTime() - Date.parse(r.publishedAt) <= horizonMs);
+      records.push(...recent);
+      fetched[name] = recent.length;
     } else {
       fetched[name] = 0;
       errors.push({ provider: name, error: s.reason instanceof Error ? s.reason.message : String(s.reason) });
     }
   });
-  return { records, fetched, errors };
+  // The same story can appear in several feeds: keep one copy per URL.
+  const byUrl = new Map<string, RawRecord>();
+  for (const r of records) if (!byUrl.has(r.url)) byUrl.set(r.url, r);
+  return { records: [...byUrl.values()], fetched, errors };
 }
 
 export async function runLiveIngest(opts: { now: Date; repo: Repository; trigger: "cron" | "admin" | "on_demand"; cfg?: LiveConfig }): Promise<IngestReport> {
@@ -132,6 +153,7 @@ export async function runLiveIngest(opts: { now: Date; repo: Repository; trigger
       providerStale: () => false,
       llm: llmCfg ? (args) => extractWithLlm(llmCfg, args) : null,
       priorForecasts,
+      dropIrrelevant: true,
     });
     await opts.repo.recordRaw(
       records.map((r, i) => ({ key: keys[i]!, provider: r.provider, providerId: r.providerId, canonicalUrl: canonicalUrl(r.url), fetchedAt: r.fetchedAt, publishedAt: r.publishedAt, status: seen.has(keys[i]!) ? "seen" : "processed" })),
@@ -152,7 +174,10 @@ export async function runLiveIngest(opts: { now: Date; repo: Repository; trigger
       forecastsInserted: ins.inserted,
       stages: result.stages,
       deadLetters: result.deadLetters.length,
-      ingestLagMinutes: records.filter((r) => r.publishedAt).map((r) => Math.max(0, (Date.parse(r.fetchedAt) - Date.parse(r.publishedAt!)) / 60000)),
+      // Lag is measured only on items first seen within 6h of publication (feeds also re-list old stories).
+      ingestLagMinutes: records
+        .filter((r, i) => r.publishedAt && !seen.has(keys[i]!) && Date.parse(r.fetchedAt) - Date.parse(r.publishedAt) < 6 * 3_600_000)
+        .map((r) => Math.max(0, (Date.parse(r.fetchedAt) - Date.parse(r.publishedAt!)) / 60000)),
     };
     await opts.repo.finishJob(job.id, report.status === "ok" ? "ok" : "failed", report, report.finishedAt);
     return report;

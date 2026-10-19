@@ -37,15 +37,19 @@ export class SecurityMaster {
   private readonly byIdMap = new Map<string, Security>();
   private readonly byCikMap = new Map<string, Security>();
   private readonly aliasMap = new Map<string, string>();
+  private readonly byPlainTicker = new Map<string, Security>();
 
   constructor(
     readonly securities: readonly Security[],
     readonly relationships: readonly DocumentedRelationship[] = [],
     readonly memberships: readonly IndexMembership[] = [],
     aliases: Record<string, string> = {},
+    /** Link bare uppercase words that equal a ticker. Off for large live directories (too many false hits). */
+    readonly allowBare = true,
   ) {
     for (const s of securities) {
       this.byIdMap.set(s.id, s);
+      if (!s.tickerHistory.length && !this.byPlainTicker.has(s.ticker)) this.byPlainTicker.set(s.ticker, s);
       if (s.cik) this.byCikMap.set(s.cik.replace(/^0+/, ""), s);
     }
     for (const [alias, id] of Object.entries(aliases)) this.aliasMap.set(alias.toLowerCase(), id);
@@ -63,14 +67,17 @@ export class SecurityMaster {
   byTicker(ticker: string, at?: string): Security | null {
     const t = ticker.toUpperCase();
     const when = at ? Date.parse(at) : Number.POSITIVE_INFINITY;
+    const plain = this.byPlainTicker.get(t);
+    if (plain) return plain;
     for (const s of this.securities) {
+      if (!s.tickerHistory.length) continue;
       if (s.tickerHistory.length) {
         for (const h of s.tickerHistory) {
           const from = Date.parse(h.from);
           const to = h.to ? Date.parse(h.to) : Number.POSITIVE_INFINITY;
           if (h.ticker === t && when >= from && when < to) return s;
         }
-      } else if (s.ticker === t) return s;
+      }
     }
     return null;
   }
@@ -115,7 +122,7 @@ export class SecurityMaster {
         if (sec) add(sec.ticker, "name_alias");
       }
     }
-    for (const m of text.matchAll(/\b([A-Z]{2,5})\b/g)) {
+    if (this.allowBare) for (const m of text.matchAll(/\b([A-Z]{2,5})\b/g)) {
       const s = m[1]!;
       if (this.byTicker(s) && !out.has(s)) add(s, "bare");
     }

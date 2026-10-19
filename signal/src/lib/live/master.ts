@@ -5,6 +5,7 @@
  */
 import type { Security } from "@/lib/domain/types";
 import { SecurityMaster } from "@/lib/analysis/securityMaster";
+import { LIVE_ALIASES } from "./aliases";
 
 const proxy = (t: string, name: string, sector: string, industry: string, loadings: Security["factorLoadings"]): Security => ({
   id: `live:${t}`,
@@ -37,7 +38,12 @@ export const LIVE_PROXIES: Security[] = [
   proxy("XLF", "Financial Select Sector SPDR Fund", "Financials", "Sector ETF", { ratesPer100bp: 2.5 }),
 ];
 
-export function buildLiveMaster(secCompanies: Security[]): SecurityMaster {
+export function buildLiveMaster(companies: Security[]): SecurityMaster {
   const proxyTickers = new Set(LIVE_PROXIES.map((p) => p.ticker));
-  return new SecurityMaster([...LIVE_PROXIES, ...secCompanies.filter((s) => !proxyTickers.has(s.ticker))]);
+  const list = [...LIVE_PROXIES, ...companies.filter((s) => !proxyTickers.has(s.ticker))];
+  // BRK.B is not in the plain-ticker directories; add it so the alias resolves.
+  if (!list.some((s) => s.ticker === "BRK.B")) list.push({ ...LIVE_PROXIES[0]!, id: "us:BRK.B", ticker: "BRK.B", name: "Berkshire Hathaway Class B", kind: "equity", sector: "Financials", industry: "Unclassified", factorLoadings: undefined, description: undefined, benchmarkId: "live:SPY" });
+  const known = new Set(list.map((s) => s.ticker));
+  const aliases = Object.fromEntries(Object.entries(LIVE_ALIASES).filter(([, t]) => known.has(t)).map(([a, t]) => [a, list.find((s) => s.ticker === t)!.id]));
+  return new SecurityMaster(list, [], [], aliases, false);
 }

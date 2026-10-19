@@ -37,6 +37,7 @@ describe("demo and live never mix", () => {
   it("live mode with no provider keys returns an empty labelled feed — never demo tickers", async () => {
     vi.stubEnv("DEMO_MODE", "false");
     for (const k of ["SEC_USER_AGENT", "FRED_API_KEY", "FMP_API_KEY", "MASSIVE_API_KEY", "DATABASE_URL"]) vi.stubEnv(k, "");
+    vi.stubEnv("LIVE_FREE_SOURCES", "false");
     const { getFeed, getRibbon, search } = await import("@/lib/data/service");
     const feed = await getFeed({ limit: 50 });
     expect(feed.mode.mode).toBe("live");

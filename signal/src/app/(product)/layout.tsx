@@ -10,7 +10,7 @@ export default async function ProductLayout({ children }: { children: React.Reac
   const ribbon = await getRibbon();
   const demo = ribbon.mode.mode === "demo";
   return (
-    <div className="min-h-dvh" style={{ ["--chrome-h" as string]: demo ? "4.9rem" : "3.1rem" }}>
+    <div className="min-h-dvh" style={{ ["--chrome-h" as string]: demo ? "4.5rem" : "2.75rem" }}>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-ink" style={{ zIndex: "var(--z-toast)" }}>
         Skip to content
       </a>

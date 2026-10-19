@@ -8,7 +8,7 @@ test.describe("intelligence feed", () => {
     await expect(cards.first()).toBeVisible();
     expect(await cards.count()).toBeGreaterThanOrEqual(10);
     await expect(cards.first().locator("h3")).not.toBeEmpty();
-    await expect(cards.first()).toContainText("Affected · model-estimated abnormal reaction");
+    await expect(cards.first()).toContainText("Exposed assets");
   });
 
   test("category and search filters narrow the feed and can be cleared", async ({ page }) => {

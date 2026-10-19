@@ -12,6 +12,7 @@ import { quantile } from "@/lib/quant/stats";
 import { logReturnPct } from "@/lib/quant/returns";
 import { minMetricSample } from "@/lib/config/env";
 import { FRED_SERIES, latestRelease } from "@/lib/providers/fred";
+import { blsReleases } from "@/lib/providers/free";
 import { liveMaster, runLiveIngest, type IngestReport } from "@/lib/live/jobs";
 import { LivePriceStore } from "@/lib/live/prices";
 import { LIVE_PROXIES } from "@/lib/live/master";
@@ -220,6 +221,32 @@ export async function liveMacro(): Promise<{ mode: ModeInfo; rows: MacroRow[] }>
       } catch {
         // Provider failure is reflected in provider health; no fabricated row.
       }
+    }
+  }
+  if (!rows.length && cfg.free) {
+    try {
+      for (const r of await blsReleases()) {
+        rows.push({
+          id: `bls-${r.indicator}-${r.period}`.replace(/\W+/g, "-").toLowerCase(),
+          indicator: r.indicator,
+          period: r.period,
+          releaseAt: now.toISOString(),
+          releaseTimeKnown: false,
+          status: "released",
+          unit: r.unit,
+          actual: r.actual,
+          consensus: null,
+          consensusSource: null,
+          prior: r.prior,
+          revisedPrior: null,
+          surprise: computeMacroSurprise({ indicator: r.indicator, unit: r.unit, actual: r.actual, prior: r.prior, revisedPrior: null }, null),
+          source: "BLS public API (latest observation; release date not provided)",
+          eventId: null,
+          isSynthetic: false,
+        });
+      }
+    } catch {
+      // BLS quota or outage: shown on Data Status; nothing fabricated here.
     }
   }
   return { mode: modeInfo(now), rows };

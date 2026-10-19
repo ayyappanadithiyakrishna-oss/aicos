@@ -62,6 +62,12 @@ function bottomLineFor(inp: ExplanationInputs): string {
       return `${issuer} announced a capital return program, which may support the shares through reduced share count and a signal of management confidence.`;
     case "issuer_adverse":
       return `${issuer} disclosed an adverse event that may raise costs or liabilities, pressuring expected cash flows until the scope becomes clearer.`;
+    case "market_equities":
+    case "market_rates":
+    case "market_oil":
+      return ctx.shock === 0
+        ? "A market-wide report without a stated direction; the proxies below show where it would transmit, but no estimate is offered."
+        : `A market-wide report describes ${mech.family === "market_rates" ? "yields" : mech.family === "market_oil" ? "crude" : "equities"} moving ${ctx.shock > 0 ? "higher" : "lower"}; the effect shows up first in broad index proxies rather than single names.`;
     case "issuer_price_war":
       return `${issuer} is cutting prices, which may pressure margins across documented competitors if rivals match the move.`;
     default:

@@ -10,57 +10,64 @@
    ========================================================================== */
 
 :root {
-  --bg: #090d13;
-  --bg-raised: #0c1118;
-  --surface: #0f151e;
-  --surface-2: #141c27;
-  --surface-3: #1a2431;
-  --line: #1b2532;
-  --line-2: #273343;
-  --ink: #e8edf4;
-  --ink-2: #a9b4c3;
-  --ink-3: #7f8a9b;
-  --accent: #52d4e8;
-  --accent-strong: #7fe2f1;
-  --accent-dim: rgb(82 212 232 / 0.13);
-  --accent-ink: #04222a;
-  --pos: #4cc38f;
-  --pos-dim: rgb(76 195 143 / 0.14);
-  --neg: #f07b6c;
-  --neg-dim: rgb(240 123 108 / 0.14);
-  --warn: #e6b450;
-  --warn-dim: rgb(230 180 80 / 0.13);
-  --focus: #52d4e8;
-  --shadow: 0 1px 0 rgb(255 255 255 / 0.02) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
-  --grid: rgb(255 255 255 / 0.035);
-  color-scheme: dark;
+  /* Apple web palette (VoltAgent awesome-design-md / apple/DESIGN.md), light by default. */
+  --bg: #f5f5f7;
+  --bg-raised: #fbfbfd;
+  --surface: #ffffff;
+  --surface-2: #f5f5f7;
+  --surface-3: #e8e8ed;
+  --line: #e5e5ea;
+  --line-2: #d2d2d7;
+  --ink: #1d1d1f;
+  --ink-2: #424245;
+  --ink-3: #6e6e73;
+  --accent: #0066cc;
+  --accent-strong: #0071e3;
+  --accent-dim: rgb(0 102 204 / 0.08);
+  --accent-ink: #ffffff;
+  --pos: #116a32;
+  --pos-dim: rgb(36 138 61 / 0.1);
+  --neg: #d70015;
+  --neg-dim: rgb(215 0 21 / 0.08);
+  --warn: #a64b00;
+  --warn-dim: rgb(255 149 0 / 0.14);
+  --focus: #0071e3;
+  --shadow: none;
+  --grid: rgb(0 0 0 / 0.035);
+  --nav-bg: rgb(22 22 23 / 0.92);
+  --nav-ink: rgb(255 255 255 / 0.92);
+  --nav-ink-2: rgb(255 255 255 / 0.62);
+  color-scheme: light;
 }
 
-:root[data-theme="light"] {
-  --bg: #f4f6f9;
-  --bg-raised: #eef1f5;
-  --surface: #ffffff;
-  --surface-2: #f6f8fb;
-  --surface-3: #edf1f6;
-  --line: #dfe5ec;
-  --line-2: #cbd4df;
-  --ink: #0b1320;
-  --ink-2: #3c495b;
-  --ink-3: #5a6779;
-  --accent: #0a8497;
-  --accent-strong: #066f80;
-  --accent-dim: rgb(10 132 151 / 0.1);
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --bg-raised: #0a0a0b;
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
+  --surface-3: #3a3a3c;
+  --line: #2c2c2e;
+  --line-2: #3a3a3c;
+  --ink: #f5f5f7;
+  --ink-2: #c7c7cc;
+  --ink-3: #98989d;
+  --accent: #2997ff;
+  --accent-strong: #64b5ff;
+  --accent-dim: rgb(41 151 255 / 0.14);
   --accent-ink: #ffffff;
-  --pos: #137a51;
-  --pos-dim: rgb(19 122 81 / 0.1);
-  --neg: #bf3d2b;
-  --neg-dim: rgb(191 61 43 / 0.09);
-  --warn: #8f6200;
-  --warn-dim: rgb(143 98 0 / 0.1);
-  --focus: #0a8497;
-  --shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 6px 18px -10px rgb(15 23 42 / 0.18);
-  --grid: rgb(11 19 32 / 0.04);
-  color-scheme: light;
+  --pos: #30d158;
+  --pos-dim: rgb(48 209 88 / 0.14);
+  --neg: #ff453a;
+  --neg-dim: rgb(255 69 58 / 0.14);
+  --warn: #ff9f0a;
+  --warn-dim: rgb(255 159 10 / 0.14);
+  --focus: #2997ff;
+  --shadow: none;
+  --grid: rgb(255 255 255 / 0.04);
+  --nav-bg: rgb(22 22 23 / 0.92);
+  --nav-ink: rgb(255 255 255 / 0.92);
+  --nav-ink-2: rgb(255 255 255 / 0.62);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -85,9 +92,10 @@
   --color-warn: var(--warn);
   --color-warn-dim: var(--warn-dim);
 
-  --font-sans: var(--ff-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-serif: var(--ff-serif), ui-serif, Georgia, serif;
-  --font-mono: var(--ff-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--ff-sans), "Helvetica Neue", system-ui, sans-serif;
+  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--ff-sans), "Helvetica Neue", system-ui, sans-serif;
+  /* Apple uses SF Pro for numbers too; tabular figures come from .num. */
+  --font-mono: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--ff-sans), "Helvetica Neue", system-ui, sans-serif;
 
   /* Fixed product scale (~1.15 ratio). */
   --text-2xs: 0.6875rem;
@@ -107,9 +115,9 @@
   --text-2xl: 1.5rem;
   --text-2xl--line-height: 1.9rem;
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 9px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 18px;
 
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -135,7 +143,7 @@ body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: var(--text-base--line-height);
-  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -145,6 +153,7 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+  letter-spacing: -0.022em;
 }
 
 p {
@@ -170,7 +179,7 @@ p {
 
 /* Unmistakable DEMO band. */
 .demo-stripes {
-  background-image: repeating-linear-gradient(-45deg, var(--warn-dim) 0 10px, transparent 10px 20px);
+  background: var(--warn-dim);
 }
 
 .hatch {
@@ -261,16 +270,16 @@ p {
 
 /* Ticker monograms: hue per ticker, lightness per theme (contrast-checked both ways). */
 :root {
-  --mono-bg-l: 0.42;
-  --mono-bg-a: 0.35;
-  --mono-fg-l: 0.87;
-  --mono-ring-l: 0.6;
-}
-:root[data-theme="light"] {
-  --mono-bg-l: 0.93;
+  --mono-bg-l: 0.95;
   --mono-bg-a: 1;
-  --mono-fg-l: 0.36;
-  --mono-ring-l: 0.8;
+  --mono-fg-l: 0.38;
+  --mono-ring-l: 0.86;
+}
+:root[data-theme="dark"] {
+  --mono-bg-l: 0.32;
+  --mono-bg-a: 1;
+  --mono-fg-l: 0.88;
+  --mono-ring-l: 0.4;
 }
 .monogram {
   background: oklch(var(--mono-bg-l) 0.05 var(--mono-h) / var(--mono-bg-a));

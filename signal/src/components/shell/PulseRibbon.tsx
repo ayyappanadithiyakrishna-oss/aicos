@@ -5,7 +5,7 @@ import { num, signedPct, timeET } from "@/lib/format";
 
 export function PulseRibbon({ items, mode }: { items: PulseRibbonItem[]; mode: "demo" | "live" }) {
   return (
-    <div className="border-b border-line bg-bg" aria-label="Market pulse ribbon">
+    <div className="border-b border-line bg-surface" aria-label="Market pulse ribbon">
       <ul className="scroll-x flex items-stretch gap-0 px-2">
         {items.map((it) => {
           const tone = it.changePct === null ? "text-ink-3" : it.changePct > 0 ? "text-pos" : it.changePct < 0 ? "text-neg" : "text-ink-2";
@@ -16,7 +16,7 @@ export function PulseRibbon({ items, mode }: { items: PulseRibbonItem[]; mode: "
                 className="flex h-9 items-center gap-2 rounded-md px-2.5 transition-colors hover:bg-surface-2"
                 title={`${it.label} · ${it.entitlement === "synthetic" ? "synthetic price" : it.entitlement === "delayed" ? "delayed" : "no entitlement"}${it.asOf ? ` · as of ${timeET(it.asOf)}` : ""}`}
               >
-                <span className="font-mono text-xs font-semibold text-ink">{it.ticker}</span>
+                <span className="text-xs font-semibold text-ink">{it.ticker}</span>
                 <span className="num font-mono text-xs text-ink-2">{it.last === null ? "—" : num(it.last)}</span>
                 <span className={clsx("num font-mono text-xs", tone)}>{signedPct(it.changePct, { dp: 2 })}</span>
               </Link>

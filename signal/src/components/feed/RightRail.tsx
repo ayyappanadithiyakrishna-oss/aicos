@@ -77,7 +77,7 @@ export function RightRail({ pulse, catalysts, events, freshness, asOf }: { pulse
                 <div className="flex items-center gap-1.5 text-2xs text-ink-3">
                   <span className="num font-mono text-ink-2">Q{e.quality.score}</span> · {subtypeLabel(e.subtype)}
                 </div>
-                <div className="line-clamp-2 text-xs text-ink-2 group-hover:text-ink">{e.bottomLine}</div>
+                <div className="line-clamp-2 text-xs text-ink-2 group-hover:text-ink">{e.subtype === "other.unclassified" || e.subtype.startsWith("market.") ? e.originalTitle : e.bottomLine}</div>
               </Link>
             </li>
           ))}

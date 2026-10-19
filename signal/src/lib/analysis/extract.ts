@@ -56,7 +56,7 @@ const KEYWORD_RULES: Array<{ subtype: string; type: EventType; re: RegExp }> = [
   { subtype: "macro.fomc", type: "macro", re: /\b(fomc|rate decision|federal funds rate)\b/i },
   { subtype: "ma.announced", type: "ma", re: /\b(to acquire|agrees? to buy|merger agreement|takeover (bid|offer)|tender offer|all-cash deal)\b/i },
   { subtype: "earnings.guidance", type: "earnings", re: /\b(raises|lifts|lowers|cuts|reaffirms|withdraws|initiates)\b.{0,30}\b(guidance|outlook|forecast)\b/i },
-  { subtype: "earnings.report", type: "earnings", re: /\b(quarterly results|q[1-4] (results|earnings)|earnings per share|eps\b|revenue (beat|miss)|tops estimates|misses estimates|preliminary (quarterly )?revenue)/i },
+  { subtype: "earnings.report", type: "earnings", re: /\b(quarterly results|q[1-4] (results|earnings)|earnings per share|eps\b|revenue (beat|miss)|tops estimates|misses estimates|beat(s|ing)? (estimates|expectations)|miss(es|ed)? (estimates|expectations)|record (profit|revenue)|quarterly (profit|revenue)|preliminary (quarterly )?revenue)/i },
   { subtype: "regulation.drug_approval", type: "regulation", re: /\b(fda|complete response letter|advisory committee)\b/i },
   { subtype: "regulation.antitrust", type: "regulation", re: /\b(antitrust|competition authority|sues to block|ftc|department of justice)\b/i },
   { subtype: "regulation.export_controls", type: "regulation", re: /\bexport (controls?|restrictions?|licen[cs]es?)\b/i },
@@ -69,6 +69,10 @@ const KEYWORD_RULES: Array<{ subtype: string; type: EventType; re: RegExp }> = [
   { subtype: "company.buyback", type: "company", re: /\b(buyback|share repurchase)\b/i },
   { subtype: "sector.supply_shortage", type: "sector", re: /\b(shortage|supply constraints?|allocation)\b/i },
   { subtype: "sector.price_war", type: "sector", re: /\b(price war|price cuts?|discounting)\b/i },
+  { subtype: "macro.cpi", type: "macro", re: /\binflation (heats|cools|rises|falls|accelerates|eases|data|report)\b/i },
+  { subtype: "market.rates", type: "macro", re: /\b(treasury yields?|bond (market|yields?|sell-?off)|10-year yield|mortgage rates)\b/i },
+  { subtype: "market.oil", type: "geopolitics", re: /\b(oil prices?|crude (prices?|futures)|brent|opec)\b/i },
+  { subtype: "market.equities", type: "sector", re: /\b(stocks?|futures|nasdaq|s&p 500|dow|wall street|sell-?off|stock market)\b/i },
 ];
 
 export function classify(record: RawRecord): { type: EventType; subtype: string; why: string } {

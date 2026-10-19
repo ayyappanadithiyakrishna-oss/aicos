@@ -14,6 +14,12 @@ export const ALLOWED_HOSTS = new Set([
   "financialmodelingprep.com",
   "api.massive.com",
   "api.polygon.io",
+  "api.gdeltproject.org",
+  "query1.finance.yahoo.com",
+  "api.bls.gov",
+  "www.nasdaqtrader.com",
+  "search.cnbc.com",
+  "www.federalreserve.gov",
 ]);
 
 export type ProviderErrorKind = "auth" | "quota" | "rate_limited" | "upstream" | "schema" | "network" | "blocked" | "circuit_open";
@@ -89,7 +95,7 @@ async function takeToken(provider: string, ratePerSec: number): Promise<void> {
   const x = h(provider);
   for (;;) {
     const now = Date.now();
-    x.tokens = Math.min(ratePerSec, x.tokens + ((now - x.refilledAt) / 1000) * ratePerSec);
+    x.tokens = Math.min(Math.max(1, ratePerSec), x.tokens + ((now - x.refilledAt) / 1000) * ratePerSec);
     x.refilledAt = now;
     if (x.tokens >= 1) {
       x.tokens -= 1;

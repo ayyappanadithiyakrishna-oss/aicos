@@ -32,7 +32,7 @@ export function Watchlists({ universe }: { universe: Array<{ ticker: string; nam
         <label className="sr-only" htmlFor="wl-add">
           Ticker to add
         </label>
-        <input id="wl-add" list="wl-universe" value={v} onChange={(e) => setV(e.target.value)} placeholder="Add ticker" className="h-9 w-44 rounded-md border border-line-2 bg-surface px-3 font-mono text-sm uppercase outline-none placeholder:normal-case placeholder:text-ink-3 focus:border-accent" />
+        <input id="wl-add" list="wl-universe" value={v} onChange={(e) => setV(e.target.value)} placeholder="Add ticker" className="h-9 w-44 rounded-md border border-line-2 bg-surface px-3 font-mono text-sm outline-none placeholder:normal-case placeholder:text-ink-3 focus:border-accent" />
         <datalist id="wl-universe">
           {universe.map((u) => (
             <option key={u.ticker} value={u.ticker}>

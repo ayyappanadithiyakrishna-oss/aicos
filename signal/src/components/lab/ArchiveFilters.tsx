@@ -40,7 +40,7 @@ export function ArchiveFilters() {
       >
         <label className="flex items-center gap-1.5 text-xs text-ink-3">
           Ticker
-          <input value={ticker} onChange={(e) => setTicker(e.target.value)} placeholder="Any" className="h-8 w-24 rounded-md border border-line-2 bg-surface px-2 font-mono text-sm uppercase text-ink outline-none placeholder:normal-case focus:border-accent" />
+          <input value={ticker} onChange={(e) => setTicker(e.target.value)} placeholder="Any" className="h-8 w-24 rounded-md border border-line-2 bg-surface px-2 font-mono text-sm text-ink outline-none placeholder:normal-case focus:border-accent" />
         </label>
       </form>
       <Sel sp={sp} set={set} k="horizon" label="Horizon" options={[["", "All"], ["1h", "1h"], ["next_session", "Next session"], ["5_sessions", "5 sessions"]]} />

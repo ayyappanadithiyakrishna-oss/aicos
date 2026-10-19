@@ -37,7 +37,7 @@ export function FeedView({ initial, asOf }: Props) {
   const [result, setResult] = useState<{ key: string; data: Props["initial"] }>({ key: "initial", data: initial });
   const [error, setError] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [focus, setFocus] = useState(0);
+  const [focus, setFocus] = useState(-1);
   const [qInput, setQInput] = useState(sp.get("q") ?? "");
   const listRef = useRef<HTMLDivElement>(null);
   const isDefault = FILTER_KEYS.every((k) => !sp.get(k));
@@ -73,7 +73,7 @@ export function FeedView({ initial, asOf }: Props) {
         if (!r.ok) throw new Error(`Feed request failed (${r.status})`);
         setResult({ key: queryKey, data: (await r.json()) as Props["initial"] });
         setError(null);
-        setFocus(0);
+        setFocus(-1);
       })
       .catch((e: unknown) => {
         if ((e as Error).name !== "AbortError") {
@@ -147,7 +147,7 @@ export function FeedView({ initial, asOf }: Props) {
               className={clsx("h-7 shrink-0 cursor-pointer rounded-md px-2.5 text-xs transition-colors", category === c.key ? "bg-surface-3 text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink")}
             >
               {c.label}
-              {c.key !== "all" && c.key !== "watchlist" ? <span className="ml-1 font-mono text-[10px] text-ink-3">{c.count}</span> : null}
+              {c.key !== "all" && c.key !== "watchlist" ? <span className="ml-1 font-mono text-[11px] text-ink-3">{c.count}</span> : null}
             </button>
           ))}
         </div>
@@ -166,7 +166,7 @@ export function FeedView({ initial, asOf }: Props) {
             <Popover.Trigger asChild>
               <button type="button" className={buttonClass("outline")} aria-label="Filters">
                 <SlidersHorizontal className="size-3.5" aria-hidden /> Filters
-                {activeFilters.length ? <span className="rounded-sm bg-accent-dim px-1 font-mono text-[10px] text-accent">{activeFilters.length}</span> : null}
+                {activeFilters.length ? <span className="rounded-sm bg-accent-dim px-1 font-mono text-[11px] text-accent">{activeFilters.length}</span> : null}
               </button>
             </Popover.Trigger>
             <Popover.Portal>

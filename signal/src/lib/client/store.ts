@@ -26,7 +26,7 @@ export interface ClientState {
 }
 
 const KEY = "signal:v1";
-export const DEFAULT_SETTINGS: Settings = { theme: "dark", timeDisplay: "et", ranking: "market", defaultHorizon: "next_session", density: "comfortable" };
+export const DEFAULT_SETTINGS: Settings = { theme: "light", timeDisplay: "et", ranking: "market", defaultHorizon: "next_session", density: "comfortable" };
 const EMPTY: ClientState = { watchlist: [], bookmarks: [], followed: [], rules: [], deliveries: [], settings: DEFAULT_SETTINGS, savedViews: [] };
 
 let cache: ClientState | null = null;

@@ -14,10 +14,8 @@ export default async function FeedPage() {
     <div className="grid gap-5 min-[1380px]:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-xl font-semibold tracking-[-0.01em]">Intelligence feed</h1>
-          <p className="text-2xs text-ink-3">
-            Insight first, article second. Every number is either a sourced fact or a model estimate labelled with its horizon and uncertainty.
-          </p>
+          <h1 className="text-[28px] font-semibold leading-tight">Today</h1>
+          <p className="text-xs text-ink-3">{feed.mode.mode === "live" ? "Live news, the assets it touches, and what the model will and won’t say." : "Synthetic demo world."}</p>
         </div>
         {feed.mode.mode === "live" && !feed.items.length ? (
           <div className="mb-4 rounded-lg border border-line bg-surface p-4 text-sm text-ink-2">

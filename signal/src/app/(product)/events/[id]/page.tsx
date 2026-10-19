@@ -56,9 +56,9 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
       </nav>
 
       <header className="rounded-lg border border-line bg-surface p-5">
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.05em] text-ink-3">
+        <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-ink-3">
           <span className="font-semibold text-ink-2">{subtypeLabel(e.subtype)}</span>· {EVENT_TYPE_LABEL[e.eventType]} · {e.primarySourceName}
-          <Chip tone={e.confirmationStatus === "unverified" ? "warn" : "accent"} className="normal-case tracking-normal">
+          <Chip tone={e.confirmationStatus === "unverified" ? "warn" : "accent"}>
             {CONFIRMATION_LABEL[e.confirmationStatus]}
           </Chip>
           {e.overlapping ? <Chip tone="warn">Overlapping event</Chip> : null}
@@ -98,7 +98,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                 {card.facts.map((f, i) => (
                   <li key={i} className="text-sm text-ink">
                     {f.text}
-                    <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.04em] text-ink-3">
+                    <div className="mt-0.5 font-mono text-[11px] text-ink-3">
                       Confirmed fact
                       {f.evidence ? (
                         <>

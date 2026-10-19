@@ -420,8 +420,51 @@ function dealFamily(ctx: MechanismContext): MechanismResult {
   };
 }
 
+/** Broad-market headlines: link to index proxies only (no single-name exposure is invented). */
+function marketFamily(ctx: MechanismContext, which: "equities" | "rates" | "oil"): MechanismResult {
+  const s = ctx.shock;
+  const g = new GraphBuilder();
+  const ev = g.node("event", "event", which === "equities" ? "Equity market move" : which === "rates" ? "Rates move" : "Oil price move");
+  const pick = which === "equities" ? ["SPY", "QQQ", "IWM"] : which === "rates" ? ["TLT", "QQQ"] : ["XLE", "SPY"];
+  const exposures: ExposureCandidate[] = [];
+  for (const t of pick) {
+    const sec = ctx.master.byTicker(t);
+    if (!sec) continue;
+    // A headline reports a move that already happened; it is not a forward call, so no sign is asserted.
+    const sign: Sign = "mixed";
+    exposures.push({
+      security: sec,
+      relationship: which === "rates" ? "rate_sensitivity" : which === "oil" ? "commodity_sensitivity" : "index",
+      directness: "second_order",
+      sign,
+      severity: "low",
+      mechanism: which === "equities" ? "Broad-market proxy for the reported move" : which === "rates" ? "Duration exposure to the reported yield move" : "Energy-sector proxy for the reported crude move",
+      linkage: ["Headline describes a market-wide move", `${sec.ticker} is a market proxy (hypothesized link)`],
+      support: [{ text: `${sec.ticker}: market proxy in the security master`, path: `/ticker/${sec.ticker}` }],
+      hypothesized: true,
+      channelKey: `${which}:${sign}`,
+    });
+    const n = g.node(`sec_${sec.ticker}`, "security", sec.ticker, sec.id);
+    g.edge(ev, n, { sign, relationship: "hypothesized", directness: "second_order", lag: "hours", uncertainty: "high", rationale: "Market-wide headline mapped to a proxy", hypothesized: true });
+  }
+  return {
+    family: `market_${which}`,
+    label: "Market move",
+    transmission: s === 0 ? ["Market-wide report", "Direction not stated in the headline"] : [`Reported ${which === "rates" ? "yields" : which === "oil" ? "crude" : "equities"} ${s > 0 ? "higher" : "lower"}`, "Proxy assets reprice"],
+    graph: g.build(),
+    exposures,
+    counterMechanisms: ["Headlines describe moves already in prices; the remaining reaction may be small."],
+    invalidation: ["The reported move reverses intraday"],
+    openQuestions: ["What specific catalyst drove the move?"],
+    scenario: { upside: "Move extends as positioning adjusts.", downside: "Move fades once the catalyst is digested." },
+  };
+}
+
 export function buildMechanism(ctx: MechanismContext): MechanismResult {
   const st = ctx.subtype;
+  if (st === "market.equities") return marketFamily(ctx, "equities");
+  if (st === "market.rates") return marketFamily(ctx, "rates");
+  if (st === "market.oil") return marketFamily(ctx, "oil");
   if (st === "macro.cpi" || st === "macro.pce") return ratesFamily(ctx, "inflation");
   if (st === "macro.fomc") return ratesFamily(ctx, "policy");
   if (st === "macro.payrolls" || st === "macro.retail_sales" || st === "macro.gdp" || st === "macro.pmi") return growthFamily(ctx, false);

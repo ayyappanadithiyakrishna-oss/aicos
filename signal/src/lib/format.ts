@@ -168,7 +168,10 @@ export function subtypeLabel(subtype: string): string {
     "filing.other_event": "8-K other event",
     "sector.supply_shortage": "Supply shortage",
     "sector.price_war": "Price cuts",
-    "other.unclassified": "Unclassified",
+    "other.unclassified": "Company news",
+    "market.equities": "Equity markets",
+    "market.rates": "Rates",
+    "market.oil": "Oil",
   };
   return map[subtype] ?? subtype.split(".").pop()!.replace(/_/g, " ");
 }

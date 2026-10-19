@@ -8,7 +8,7 @@ export const toneBg = { pos: "bg-pos-dim text-pos", neg: "bg-neg-dim text-neg", 
 
 export function Chip({ children, tone = "muted", className, title }: { children: ReactNode; tone?: keyof typeof toneBg; className?: string; title?: string }) {
   return (
-    <span title={title} className={clsx("inline-flex items-center gap-1 rounded-sm px-1.5 py-px font-mono text-2xs font-medium uppercase tracking-[0.04em] whitespace-nowrap", toneBg[tone], className)}>
+    <span title={title} className={clsx("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap", toneBg[tone], className)}>
       {children}
     </span>
   );
@@ -16,7 +16,7 @@ export function Chip({ children, tone = "muted", className, title }: { children:
 
 export function DemoChip({ className }: { className?: string }) {
   return (
-    <span className={clsx("inline-flex items-center rounded-sm border border-warn/40 px-1 font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-warn", className)} title="Synthetic demo data — not a real company, price or release">
+    <span className={clsx("inline-flex items-center rounded-full bg-warn-dim px-2 py-0.5 text-[11px] font-medium text-warn", className)} title="Synthetic demo data — not a real company, price or release">
       Demo
     </span>
   );
@@ -32,13 +32,13 @@ export function Pct({ value, className, colored = true, dp }: { value: number | 
 }
 
 export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="rounded-sm border border-line-2 bg-surface-2 px-1 font-mono text-[10px] text-ink-3">{children}</kbd>;
+  return <kbd className="rounded border border-current/20 px-1 text-[11px] opacity-70">{children}</kbd>;
 }
 
 export function SectionTitle({ children, action, id }: { children: ReactNode; action?: ReactNode; id?: string }) {
   return (
     <div className="mb-2 flex items-center justify-between gap-3">
-      <h2 id={id} className="text-xs font-semibold text-ink-2">
+      <h2 id={id} className="text-[15px] font-semibold text-ink">
         {children}
       </h2>
       {action}
@@ -48,7 +48,7 @@ export function SectionTitle({ children, action, id }: { children: ReactNode; ac
 
 export function Panel({ children, className, as: As = "section", ...rest }: { children: ReactNode; className?: string; as?: "section" | "div" | "article" | "aside"; "aria-labelledby"?: string }) {
   return (
-    <As className={clsx("min-w-0 rounded-lg border border-line bg-surface", className)} {...rest}>
+    <As className={clsx("min-w-0 rounded-lg bg-surface", className)} {...rest}>
       {children}
     </As>
   );
@@ -68,7 +68,7 @@ export function PageHeader({ title, description, children }: { title: string; de
   return (
     <header className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-[-0.01em] text-ink">{title}</h1>
+        <h1 className="text-[28px] font-semibold leading-tight text-ink">{title}</h1>
         {description ? <div className="mt-1 max-w-[75ch] text-sm text-ink-2">{description}</div> : null}
       </div>
       {children ? <div className="flex shrink-0 flex-wrap items-center gap-2">{children}</div> : null}
@@ -89,8 +89,8 @@ export function Stat({ label, value, sub, tone = "ink" }: { label: string; value
 export const buttonClass = (variant: "primary" | "ghost" | "outline" = "outline", size: "sm" | "md" = "sm") =>
   clsx(
     "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50",
-    size === "sm" ? "h-8 px-2.5 text-sm" : "h-9 px-3.5 text-base",
+    size === "sm" ? "h-8 rounded-full px-3.5 text-sm" : "h-9 rounded-full px-5 text-base",
     variant === "primary" && "bg-accent text-accent-ink hover:bg-accent-strong",
-    variant === "outline" && "border border-line-2 bg-surface text-ink hover:border-ink-3 hover:bg-surface-2",
+    variant === "outline" && "bg-surface-3 text-ink hover:bg-line-2",
     variant === "ghost" && "text-ink-2 hover:bg-surface-2 hover:text-ink",
   );

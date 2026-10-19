@@ -70,6 +70,8 @@ export interface PipelineContext {
   seen?: ReadonlySet<string>;
   /** Minutes between ingest and forecast generation (pipeline latency). */
   scoringLagMinutes?: number;
+  /** Drop records that are neither classified nor linked to any security (off-topic headlines). */
+  dropIrrelevant?: boolean;
   /** Latest stored forecast per `${eventId}|${securityId}|${horizon}`; changes create linked revisions. */
   priorForecasts?: ReadonlyMap<string, ForecastSnapshot>;
 }
@@ -194,6 +196,7 @@ export async function runPipeline(records: readonly RawRecord[], ctx: PipelineCo
     () =>
       prepared0
         .filter((p) => detectLanguage(`${p.record.title} ${p.record.excerpt}`) === "en")
+        .filter((p) => !ctx.dropIrrelevant || classify(p.record).subtype !== "other.unclassified" || ctx.master.resolve(`${p.record.title} ${p.record.excerpt}`, p.record.tickers, p.publishedAt, null).verified.length > 0)
         .map((p) => {
           const r = p.record;
           let verified: Prepared["verified"] = [];
@@ -375,7 +378,7 @@ async function analyzeCluster(
     : extraction.guidance !== "none" && extraction.subtype.startsWith("earnings")
       ? { epsActual: null, epsConsensus: null, revenueActual: null, revenueConsensus: null, consensusSource: null, guidance: extraction.guidance, surpriseZ: null }
       : null;
-  const subtype = ctx.llm ? classify(primary.record).subtype : extraction.subtype;
+  let subtype = ctx.llm ? classify(primary.record).subtype : extraction.subtype;
   const text = members.map((m) => `${m.record.title} ${m.record.excerpt}`).join(" ");
   let shock: Shock = 0;
   let magnitudeZ: number | null = null;
@@ -405,6 +408,10 @@ async function analyzeCluster(
       shock = actual.value > expected.value ? 1 : -1;
       bucket = shock > 0 ? "beat_unmeasured" : "miss_unmeasured";
     }
+  } else if (subtype.startsWith("market.")) {
+    const up = /\b(rall(y|ies)|gains?|surges?|jumps?|climbs?|rises?|higher|soars?|record high)\b/i.test(text);
+    const down = /\b(plunges?|falls?|drops?|slides?|sell-?off|tumbles?|sinks?|lower|slumps?|crash)\b/i.test(text);
+    shock = up && !down ? 1 : down && !up ? -1 : 0;
   } else if (subtype === "filing.insider_form4") {
     if (/\b(purchase|bought|buys)\b/i.test(text)) {
       shock = 1;
@@ -431,6 +438,13 @@ async function analyzeCluster(
     const direct = primary.entityIds.map((id) => ctx.master.byId(id)).filter((s) => s && s.kind === "equity");
     return direct[0] ?? null;
   })();
+  // Company-event subtypes need a company: without one (e.g. "China's growth beats estimates") the
+  // headline is treated as general news rather than mislabelled as an earnings report.
+  if (!issuer && (subtype.startsWith("earnings.") || subtype.startsWith("company."))) {
+    subtype = "other.unclassified";
+    shock = 0;
+    bucket = "na";
+  }
   const counterparty = deal?.counterpartyTicker ? ctx.master.byTicker(deal.counterpartyTicker, primary.publishedAt) : null;
   const mctx: MechanismContext = {
     subtype,
@@ -530,7 +544,7 @@ async function analyzeCluster(
     id: eventId,
     clusterId: cl.id,
     subtype,
-    eventType: ctx.llm ? classify(primary.record).type : extraction.eventType,
+    eventType: subtype === "other.unclassified" ? ("other" as const) : ctx.llm ? classify(primary.record).type : extraction.eventType,
     primary,
     members,
     evidence,

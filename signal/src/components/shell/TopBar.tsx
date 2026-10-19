@@ -85,11 +85,11 @@ export function TopBar({ mode }: { mode: ModeInfo }) {
 
   const state = mode.clock.state;
   return (
-    <header className="sticky top-0 border-b border-line bg-raised/95 backdrop-blur supports-[backdrop-filter]:bg-raised/80" style={{ zIndex: "var(--z-sticky)" }}>
-      <div className="flex h-12 items-center gap-2 px-3 sm:gap-3 sm:px-4">
+    <header className="sticky top-0 text-[var(--nav-ink)] backdrop-blur-xl" style={{ zIndex: "var(--z-sticky)", background: "var(--nav-bg)" }}>
+      <div className="flex h-11 items-center gap-2 px-3 sm:gap-3 sm:px-4 [&_.text-ink]:text-[var(--nav-ink)] [&_.text-ink-2]:text-[var(--nav-ink-2)] [&_.text-ink-3]:text-[var(--nav-ink-2)]">
         <Dialog.Root open={navOpen} onOpenChange={setNavOpen}>
           <Dialog.Trigger asChild>
-            <button type="button" className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink lg:hidden" aria-label="Open navigation">
+            <button type="button" className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-ink-2 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Open navigation">
               <Menu className="size-5" />
             </button>
           </Dialog.Trigger>
@@ -97,7 +97,7 @@ export function TopBar({ mode }: { mode: ModeInfo }) {
             <Dialog.Overlay className="fixed inset-0 bg-black/50" style={{ zIndex: "var(--z-overlay)" }} />
             <Dialog.Content className="fade-in fixed inset-y-0 left-0 flex w-[min(300px,86vw)] flex-col border-r border-line bg-raised p-3" style={{ zIndex: "var(--z-modal)" }} aria-describedby={undefined}>
               <div className="mb-3 flex items-center justify-between">
-                <Dialog.Title className="font-mono text-sm font-semibold tracking-[0.18em] text-ink">SIGNAL</Dialog.Title>
+                <Dialog.Title className="font-mono text-sm font-semibold text-ink">SIGNAL</Dialog.Title>
                 <Dialog.Close className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-ink-2 hover:bg-surface-2" aria-label="Close navigation">
                   <X className="size-5" />
                 </Dialog.Close>
@@ -111,20 +111,20 @@ export function TopBar({ mode }: { mode: ModeInfo }) {
 
         <Link href="/" className="flex items-center gap-2" aria-label="SIGNAL home">
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-            <rect x="1" y="9" width="3" height="8" rx="1" fill="var(--ink-3)" />
-            <rect x="7.5" y="5" width="3" height="12" rx="1" fill="var(--ink-2)" />
-            <rect x="14" y="1" width="3" height="16" rx="1" fill="var(--accent)" />
+            <rect x="1" y="9" width="3" height="8" rx="1.5" fill="currentColor" opacity="0.45" />
+            <rect x="7.5" y="5" width="3" height="12" rx="1.5" fill="currentColor" opacity="0.7" />
+            <rect x="14" y="1" width="3" height="16" rx="1.5" fill="currentColor" />
           </svg>
-          <span className="font-mono text-sm font-semibold tracking-[0.2em] text-ink">SIGNAL</span>
+          <span className="text-[15px] font-semibold text-ink">Signal</span>
         </Link>
         {mode.mode === "demo" ? (
-          <span className="hidden rounded-sm border border-warn/50 px-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-warn sm:inline">Demo</span>
+          <span className="hidden rounded-full bg-[#ff9f0a]/20 px-2 text-[11px] font-medium text-[#ffb340] sm:inline">Demo</span>
         ) : null}
 
         <button
           type="button"
           onClick={() => setPaletteOpen(true)}
-          className="ml-1 flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border border-line-2 bg-surface px-2.5 text-left text-sm text-ink-3 transition-colors hover:border-ink-3 sm:max-w-[420px]"
+          className="ml-1 flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-full bg-white/10 px-3 text-left text-sm text-ink-3 transition-colors hover:bg-white/15 sm:max-w-[420px]"
           aria-label="Search tickers, events and pages"
         >
           <Search className="size-4 shrink-0" aria-hidden />
@@ -141,15 +141,15 @@ export function TopBar({ mode }: { mode: ModeInfo }) {
             <span className={clsx("inline-block size-1.5 rounded-full", state === "regular" ? "live-dot bg-pos" : state === "closed" ? "bg-ink-3" : "bg-warn")} />
             <span className="text-ink-2">{SESSION_LABEL[state]}</span>
           </div>
-          <Link href="/status" className="hidden h-8 items-center gap-1.5 rounded-md px-2 text-xs text-ink-2 hover:bg-surface-2 hover:text-ink sm:flex" title="Data health and feed latency">
+          <Link href="/status" className="hidden h-8 items-center gap-1.5 rounded-md px-2 text-xs text-ink-2 hover:bg-white/10 hover:text-white sm:flex" title="Data health and feed latency">
             <span className={clsx("inline-block size-1.5 rounded-full", mode.mode === "demo" ? "bg-warn" : mode.priceEntitlement === "none" ? "bg-ink-3" : "bg-accent")} />
             {mode.mode === "demo" ? "Synthetic" : mode.label === "LIVE" ? "Live" : "No providers"}
           </Link>
-          <Link href="/watchlists" className="inline-flex size-8 items-center justify-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink" aria-label="Watchlists">
+          <Link href="/watchlists" className="inline-flex size-8 items-center justify-center rounded-md text-ink-2 hover:bg-white/10 hover:text-white" aria-label="Watchlists">
             <Star className="size-4" />
           </Link>
           <AlertsBell />
-          <Link href="/settings" className="hidden size-8 items-center justify-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink sm:inline-flex" aria-label="Settings">
+          <Link href="/settings" className="hidden size-8 items-center justify-center rounded-md text-ink-2 hover:bg-white/10 hover:text-white sm:inline-flex" aria-label="Settings">
             <Settings className="size-4" />
           </Link>
         </div>
