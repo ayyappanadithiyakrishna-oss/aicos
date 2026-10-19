@@ -7,6 +7,8 @@ export default defineConfig({
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
+  // First renders of each route after a cold start can exceed the 5 s default under parallel load.
+  expect: { timeout: 15_000 },
   use: { baseURL: `http://127.0.0.1:${PORT}`, trace: "retain-on-failure" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
@@ -17,7 +19,8 @@ export default defineConfig({
   ],
   webServer: {
     command: `npx next start -p ${PORT}`,
-    url: `http://127.0.0.1:${PORT}/api/health`,
+    // Wait on a page that builds the demo world, so the first tests do not race a cold start.
+    url: `http://127.0.0.1:${PORT}/pulse`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: { DEMO_MODE: "true", CRON_SECRET: "e2e-cron-secret-0123456789" },

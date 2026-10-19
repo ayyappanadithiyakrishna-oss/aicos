@@ -54,6 +54,8 @@ export interface RawRecord {
   };
   /** Internal route that renders the stored/synthetic document. */
   internalPath?: string | null;
+  /** Vendor-supplied per-ticker sentiment (-1 … 1), e.g. Massive insights or Marketaux entity scores. */
+  vendorSentiment?: Array<{ ticker: string; score: number; note: string }>;
 }
 
 export type StageName =

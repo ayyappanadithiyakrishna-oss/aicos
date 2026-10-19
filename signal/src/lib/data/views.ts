@@ -105,6 +105,11 @@ export interface TickerView {
   attention: { recent: number; baseline: number | null; ratio: number | null; note: string };
   trajectory: Array<{ at: string; eventId: string; direction: ForecastSnapshot["direction"]; central: number | null; tier: ForecastSnapshot["qualityTier"] }>;
   options: { available: false; reason: string };
+  /** Trailing 60-session daily volatility (percent), the model's per-session scale. */
+  sessionSigmaPct?: number | null;
+  /** Latest vendor-tagged articles for this ticker, with vendor sentiment (-1 … 1) when provided. */
+  coverage?: Array<{ title: string; url: string; publisher: string; publishedAt: string; sentiment: number | null; note: string }>;
+  sentiment?: { mean: number; n: number; positive: number; negative: number } | null;
   peers: string[];
 }
 

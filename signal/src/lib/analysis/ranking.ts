@@ -15,13 +15,16 @@ export const RANKING_WEIGHTS = {
   watchlist: 0.08,
 } as const;
 
+/** Multiplier for unclassified general coverage, so classified catalysts lead the feed. */
+export const GENERAL_COVERAGE_FACTOR = 0.6;
+
 /** Recency half-life in hours. */
 export const RECENCY_HALF_LIFE_H = 18;
 
 const CAP_BUCKET: Record<string, number> = { mega: 1, large: 0.8, mid: 0.55, small: 0.35 };
 
 export function relevance(
-  ev: Pick<IntelligenceEvent, "exposures" | "novelty" | "quality" | "firstPublishedAt" | "forecasts" | "macro" | "earnings" | "severity">,
+  ev: Pick<IntelligenceEvent, "exposures" | "novelty" | "quality" | "firstPublishedAt" | "forecasts" | "macro" | "earnings" | "severity"> & { subtype?: string },
   opts: { now: Date; watchlist?: ReadonlySet<string>; prioritize?: "market" | "watchlist"; capBuckets?: Record<string, string | null> },
 ): RelevanceBreakdown {
   const W = { ...RANKING_WEIGHTS } as Record<keyof typeof RANKING_WEIGHTS, number>;
@@ -67,7 +70,10 @@ export function relevance(
     score += contribution;
     components[k] = { value: round3(v.value), weight: round3(weight), contribution: round3(contribution), note: v.note };
   }
-  return { score: round3(score * 100), components };
+  // General coverage (commentary, listicles, unclassified company news) ranks below classified events.
+  const typeFactor = ev.subtype === "other.unclassified" ? GENERAL_COVERAGE_FACTOR : 1;
+  if (typeFactor !== 1) components.eventType = { value: typeFactor, weight: 1, contribution: round3(score * (typeFactor - 1)), note: "General coverage, not a classified market event (score × 0.6)" };
+  return { score: round3(score * typeFactor * 100), components };
 }
 
 function round3(x: number): number {

@@ -100,7 +100,7 @@ describe("FMP adapter", () => {
 });
 
 describe("live ingest under provider failure", () => {
-  const cfg: LiveConfig = { secUa: "SIGNAL test ops@example.com", fredKey: null, fmpKey: null, fmpDisplay: false, fmpConsensus: false, massiveKey: null, massiveDisplay: false, llm: false, free: false, lseKey: null };
+  const cfg: LiveConfig = { secUa: "SIGNAL test ops@example.com", fredKey: null, fmpKey: null, fmpDisplay: false, fmpConsensus: false, massiveKey: null, massiveDisplay: false, llm: false, free: false, lseKey: null, marketauxKey: null, newsApiKey: null };
   it("records the failure and produces no synthetic events", async () => {
     const realFetch = globalThis.fetch;
     globalThis.fetch = (async () => new Response("quota", { status: 429 })) as typeof fetch;

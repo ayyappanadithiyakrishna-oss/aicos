@@ -9,6 +9,7 @@ import { DIRECTION_LABEL, DIRECTION_SHORT, DIRECTION_TONE, HORIZON_LONG, RELATIO
 import { Monogram } from "@/components/ui/SecurityMark";
 import { toneText } from "@/components/ui/primitives";
 import { IntervalBar } from "./IntervalBar";
+import { ImpliedLine } from "@/components/options/ImpliedMove";
 
 export function ForecastFigure({ f, className }: { f: CardForecast | undefined; className?: string }) {
   if (!f) return <span className={clsx("text-ink-3", className)}>—</span>;
@@ -92,6 +93,7 @@ function WhyPopover({ x, horizon, children }: { x: CardExposure; horizon: Horizo
               <p className="mt-1 text-xs text-ink-3">No forecast for this horizon.</p>
             )}
           </div>
+          <ImpliedLine ticker={x.ticker} centralPct={f?.central ?? null} />
           {x.evidence.length ? (
             <div className="mt-3">
               <div className="text-2xs font-medium text-ink-3">Evidence</div>

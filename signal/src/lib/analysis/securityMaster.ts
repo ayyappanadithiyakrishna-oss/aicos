@@ -29,6 +29,9 @@ export interface CandidateSymbol {
 }
 
 /** Uppercase words that collide with tickers; never linked without a cashtag or exchange prefix. */
+/** First words too common to identify a company on their own. */
+const GENERIC_NAME_WORDS = new Set(["bank", "first", "american", "united", "general", "international", "national", "global", "energy", "capital", "financial", "royal", "public", "southern", "western", "eastern", "northern", "digital", "advanced", "applied", "texas", "pacific", "atlantic", "realty", "health", "service", "services", "union", "home", "best", "target", "booking", "progressive", "intercontinental"]);
+
 const AMBIGUOUS = new Set(
   "A AI ALL AM AN ARE AS AT BE BIG CAN CEO CFO DD EPS ETF FDA FOR FED GDP GO HAS IPO IT M&A NEW NOW ON ONE OR OUT PM SEC SO THE TV UK US USA YOY CPI PCE PMI AND".split(" "),
 );
@@ -133,6 +136,23 @@ export class SecurityMaster {
    * Verify candidates against the master and the article text.
    * Returns verified securities and quarantined symbols with reasons.
    */
+  /** True when the text names the security: its ticker as a word, its core name, or a distinctive first word. */
+  mentions(sec: Security, text: string, lower = text.toLowerCase()): boolean {
+    const t = sec.ticker.replace(".", "\\.");
+    // Short tickers (C, V, MA) are ordinary words: require a cashtag or an exchange/parenthesis form.
+    const tickerRe = sec.ticker.length <= 2 ? new RegExp(`\\$${t}\\b|\\(${t}\\)|(NYSE|NASDAQ|Nasdaq):\\s?${t}\\b`) : new RegExp(`(^|[^A-Za-z.])\\$?${t}([^A-Za-z]|$)`);
+    if (tickerRe.test(text)) return true;
+    const core = sec.name
+      .replace(/^the\s+/i, "")
+      .replace(/[,.]?\s+(inc|incorporated|corp|corporation|company|co|ltd|limited|plc|holdings?|group|n\.v|s\.a|ag|se|lp|l\.p|trust|class [a-z]|& co)\.?$/gi, "")
+      .replace(/[,.]?\s+(inc|incorporated|corp|corporation|company|co|ltd|limited|plc|holdings?|group)\.?$/gi, "")
+      .trim()
+      .toLowerCase();
+    if (core.length >= 3 && lower.includes(core)) return true;
+    const first = core.split(/\s+/)[0] ?? "";
+    return first.length >= 4 && !GENERIC_NAME_WORDS.has(first) && new RegExp(`\\b${first.replace(/[^a-z0-9]/g, "")}\\b`).test(lower);
+  }
+
   resolve(
     text: string,
     providerTickers: readonly string[],
@@ -156,10 +176,7 @@ export class SecurityMaster {
         continue;
       }
       if (c.how === "provider_tag") {
-        const mentioned =
-          new RegExp(`\\b${c.symbol}\\b`).test(text) ||
-          lower.includes(sec.name.toLowerCase().split(" ")[0]!.toLowerCase());
-        if (!mentioned) {
+        if (!this.mentions(sec, text, lower)) {
           quarantined.push({ symbol: c.symbol, reason: "Provider tag not supported by article text", articleId });
           continue;
         }

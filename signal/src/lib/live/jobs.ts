@@ -15,9 +15,11 @@ import { horizonWindow } from "@/lib/calendar/horizons";
 import { PointInTimeView, trailingBeta, trailingDailyVol } from "@/lib/quant/features";
 import { fetchCompanyTickers, fetchCurrentFilings, filingToRecord } from "@/lib/providers/sec";
 import { FRED_SERIES, latestRelease, releaseToRecord } from "@/lib/providers/fred";
-import { fmpLatestNews, massiveNews } from "@/lib/providers/vendors";
+import { fmpLatestNews } from "@/lib/providers/vendors";
+import { marketauxNews, massiveLatestNews, newsApiNews } from "@/lib/providers/news";
 import { RSS_FEEDS, fetchRss, gdeltNews } from "@/lib/providers/free";
 import { UNIVERSE } from "./universe";
+import { LIVE_MODEL } from "./model";
 import { buildLiveMaster, LIVE_PROXIES } from "./master";
 import { LivePriceStore } from "./prices";
 import { anyLiveProvider, liveConfig, liveSources, type LiveConfig } from "./registry";
@@ -81,7 +83,9 @@ export async function fetchLiveRecords(cfg: LiveConfig, now: Date): Promise<{ re
     tasks.push(["gdelt", gdeltNews(fetchedAt)]);
   }
   if (cfg.fmpKey && cfg.fmpDisplay) tasks.push(["fmp", fmpLatestNews(cfg.fmpKey, fetchedAt)]);
-  if (cfg.massiveKey && cfg.massiveDisplay) tasks.push(["massive", massiveNews(cfg.massiveKey, fetchedAt)]);
+  if (cfg.massiveKey && cfg.massiveDisplay) tasks.push(["massive", massiveLatestNews(cfg.massiveKey, fetchedAt)]);
+  if (cfg.marketauxKey) tasks.push(["marketaux", marketauxNews(cfg.marketauxKey, fetchedAt)]);
+  if (cfg.newsApiKey) tasks.push(["newsapi", newsApiNews(cfg.newsApiKey, fetchedAt)]);
   const settled = await Promise.allSettled(tasks.map(([, p]) => p));
   const records: RawRecord[] = [];
   const horizonMs = 4 * 86_400_000;
@@ -139,7 +143,7 @@ export async function runLiveIngest(opts: { now: Date; repo: Repository; trigger
       mode: "live",
       master,
       sources: new Map(liveSources(cfg).map((s) => [s.id, s] as const)),
-      model: null, // No model trained on licensed point-in-time history is deployed; forecasts abstain or give direction only.
+      model: LIVE_MODEL,
       prices,
       now: opts.now,
       providerStale: () => false,

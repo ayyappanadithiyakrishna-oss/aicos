@@ -18,7 +18,10 @@ interface Row {
 
 export const UNIVERSE_META = { generatedAt: data.generatedAt, minMarketCapUsd: data.minMarketCapUsd, source: data.source };
 
-const rows = data.securities as Row[];
+/** Secondary share classes resolve to the primary listing so one company never splits its coverage. */
+export const SHARE_CLASS_ALIAS: Record<string, string> = { GOOG: "GOOGL", "BRK.A": "BRK.B", FOX: "FOXA", NWS: "NWSA" };
+
+const rows = (data.securities as Row[]).filter((r) => !(r.t in SHARE_CLASS_ALIAS));
 const byTicker = new Map(rows.map((r) => [r.t, r]));
 
 export const universeRow = (ticker: string): Row | undefined => byTicker.get(ticker.toUpperCase());

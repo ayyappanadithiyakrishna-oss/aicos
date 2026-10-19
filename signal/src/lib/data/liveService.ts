@@ -3,6 +3,7 @@
  * (ephemeral memory store) it refreshes on demand at most every LIVE_REFRESH_SECONDS. It never
  * falls back to demo data: empty or failed upstreams produce explicit empty/outage states.
  */
+import { after } from "next/server";
 import type { IntelligenceEvent } from "@/lib/domain/types";
 import { marketClock } from "@/lib/calendar/nyse";
 import { getRepository } from "@/lib/db/client";
@@ -16,6 +17,8 @@ import { blsReleases } from "@/lib/providers/free";
 import { calendarAt, lseUsCalendar, parseFigure, type LseCalendarRow } from "@/lib/providers/lse";
 import { liveMaster, runLiveIngest, type IngestReport } from "@/lib/live/jobs";
 import { LivePriceStore } from "@/lib/live/prices";
+import { massiveLatestNews } from "@/lib/providers/news";
+import { LIVE_MODEL, LIVE_MODEL_TRAINING } from "@/lib/live/model";
 import { LIVE_PROXIES } from "@/lib/live/master";
 import { anyLiveProvider, liveConfig, liveProviderViews, priceProvider } from "@/lib/live/registry";
 import { decodeCursor, encodeCursor, queryFeed } from "./feedQuery";
@@ -45,6 +48,7 @@ export async function ensureFresh(now = new Date()): Promise<IngestReport | null
   if (repo.kind !== "memory") return lastReport;
   const ttl = Number(process.env.LIVE_REFRESH_SECONDS ?? 300) * 1000;
   if (now.getTime() - lastRunAt < ttl && lastReport) return lastReport;
+  const run = !inflight;
   if (!inflight) {
     inflight = runLiveIngest({ now, repo, trigger: "on_demand" })
       .then((r) => {
@@ -55,6 +59,18 @@ export async function ensureFresh(now = new Date()): Promise<IngestReport | null
       .finally(() => {
         inflight = null;
       });
+  }
+  // Stale-while-revalidate: once this instance has data, serve it and refresh after the response.
+  if (lastReport) {
+    if (run) {
+      const job = inflight;
+      try {
+        after(() => job);
+      } catch {
+        /* outside a request scope: the promise simply runs */
+      }
+    }
+    return lastReport;
   }
   return inflight;
 }
@@ -137,8 +153,26 @@ export async function liveTicker(symbol: string): Promise<TickerView | null> {
   const rz = await repo.realizationsFor(fs.map((f) => f.id));
   const last = daily.at(-1) ?? null;
   const prev = daily.length > 1 ? daily.at(-2)! : null;
+  const rets = daily.slice(-61).flatMap((b, i, a) => (i ? [logReturnPct(a[i - 1]!.c, b.c)] : []));
+  const mu = rets.reduce((x, y) => x + y, 0) / Math.max(1, rets.length);
+  const sessionSigmaPct = rets.length >= 20 ? Math.round(Math.sqrt(rets.reduce((x, y) => x + (y - mu) ** 2, 0) / (rets.length - 1)) * 100) / 100 : null;
+  // Per-ticker coverage from Massive (cached 15 min); a slow or rate-limited call never blocks the page.
+  const news = cfg.massiveKey && cfg.massiveDisplay
+    ? await Promise.race([
+        massiveLatestNews(cfg.massiveKey, now.toISOString(), { ticker: sec.ticker, limit: 25, sinceDays: 14 }).catch(() => []),
+        new Promise<[]>((r) => setTimeout(() => r([]), 4000)),
+      ])
+    : [];
+  const coverage = news.map((n) => {
+    const s = n.vendorSentiment?.find((x) => x.ticker === sec.ticker) ?? null;
+    return { title: n.title, url: n.url, publisher: n.publisher, publishedAt: n.publishedAt ?? n.fetchedAt, sentiment: s?.score ?? null, note: s?.note ?? "" };
+  });
+  const scored = coverage.filter((c) => c.sentiment !== null);
   return {
     mode: modeInfo(now),
+    sessionSigmaPct,
+    coverage,
+    sentiment: scored.length ? { mean: Math.round((scored.reduce((x, c) => x + c.sentiment!, 0) / scored.length) * 100) / 100, n: scored.length, positive: scored.filter((c) => c.sentiment! > 0).length, negative: scored.filter((c) => c.sentiment! < 0).length } : null,
     security: sec,
     quote: { securityId: sec.id, ticker: sec.ticker, last: last?.c ?? null, changePct: last && prev ? Math.round(logReturnPct(prev.c, last.c) * 100) / 100 : null, asOf: last?.t ?? null, entitlement: last ? "delayed" : "none", delayMinutes: null, source: prices.source },
     daily: daily.slice(-260),
@@ -153,12 +187,30 @@ export async function liveTicker(symbol: string): Promise<TickerView | null> {
     relationships: [],
     memberships: [],
     holdings: [],
-    catalysts: [],
-    attention: { recent: evs.length, baseline: null, ratio: null, note: "Baseline needs stored history (DATABASE_URL)." },
+    // Market-wide scheduled releases apply to every equity; company earnings dates need an entitled feed.
+    catalysts: (await liveCalendar()).slice(0, 5),
+    attention: (() => {
+      const wk = 7 * 86_400_000;
+      const recent = coverage.filter((c) => now.getTime() - Date.parse(c.publishedAt) <= wk).length;
+      const prior = coverage.filter((c) => now.getTime() - Date.parse(c.publishedAt) > wk).length;
+      return coverage.length
+        ? { recent, baseline: prior, ratio: prior > 0 ? Math.round((recent / prior) * 10) / 10 : null, note: "Tagged articles in the last 7 days vs the 7 days before (Massive news; capped at the 25 latest)." }
+        : { recent: evs.length, baseline: null, ratio: null, note: "No tagged coverage available right now." };
+    })(),
     trajectory: fs.slice(0, 24).reverse().map((f) => ({ at: f.forecastGeneratedAt, eventId: f.eventId, direction: f.direction, central: f.centralMovePct, tier: f.qualityTier })),
     options: { available: false, reason: "No entitled options data source configured." },
     peers: [],
   };
+}
+
+/** Regime from SPY's 20-session realized volatility (annualized). No implied-vol index is entitled. */
+function realizedRegime(spy: readonly { c: number }[] | null): MarketPulseView["regime"] {
+  const r = (spy ?? []).slice(-21).flatMap((b, i, a) => (i ? [Math.log(b.c / a[i - 1]!.c)] : []));
+  if (r.length < 15) return { label: "Unknown", volIndex: null, volTicker: null, note: "Not enough SPY history to measure realized volatility." };
+  const m = r.reduce((x, y) => x + y, 0) / r.length;
+  const vol = Math.sqrt(r.reduce((x, y) => x + (y - m) ** 2, 0) / (r.length - 1)) * Math.sqrt(252) * 100;
+  const label = vol < 12 ? "Calm" : vol < 20 ? "Normal" : vol < 30 ? "Elevated" : "Stressed";
+  return { label, volIndex: Math.round(vol * 10) / 10, volTicker: "SPY 20d RV", note: "Annualized 20-session realized volatility of SPY. Bands: under 12 calm, 12–20 normal, 20–30 elevated, above 30 stressed." };
 }
 
 export async function livePulse(): Promise<MarketPulseView> {
@@ -185,7 +237,7 @@ export async function livePulse(): Promise<MarketPulseView> {
       { ticker: "UUP", label: "US dollar", changePct: chg("live:UUP"), note: "End-of-day" },
       { ticker: "QQQ", label: "Growth equities", changePct: chg("live:QQQ"), note: "End-of-day" },
     ],
-    regime: { label: "Unknown", volIndex: null, volTicker: null, note: "Volatility index requires an entitled index feed." },
+    regime: realizedRegime(prices.daily("live:SPY")),
     drivers: evs.filter((e) => e.firstPublishedAt.startsWith(today)).slice(0, 8).map((e) => ({ eventId: e.id, at: e.firstPublishedAt, title: e.originalTitle, bottomLine: e.bottomLine, hypothesis: e.transmission.join(" → "), observed: [] })),
     volumeAnomalies: [],
     attributionNote: "Live mode without intraday entitlements: observed values are end-of-day; event links are hypotheses, not causal attribution.",
@@ -369,8 +421,8 @@ export async function liveScorecard(): Promise<ScorecardView> {
   return {
     mode: modeInfo(new Date()),
     scorecard: buildScorecard(rows, { climatology: { up: 1 / 3, down: 1 / 3, neutral: 1 / 3 }, minSample: minMetricSample(), generatedAt: new Date().toISOString() }),
-    modelVersion: null,
-    note: "Live forecasts are out-of-sample by construction. Metrics stay withheld until enough forecasts resolve.",
+    modelVersion: LIVE_MODEL.version,
+    note: `Model ${LIVE_MODEL.version} was trained on ${LIVE_MODEL_TRAINING.examples.toLocaleString("en-US")} resolved reactions from ${LIVE_MODEL_TRAINING.articles.toLocaleString("en-US")} real articles (${LIVE_MODEL_TRAINING.firstAt?.slice(0, 10)} → ${LIVE_MODEL_TRAINING.lastAt.slice(0, 10)}). Live forecasts are out-of-sample by construction; metrics appear as they resolve.`,
   };
 }
 
@@ -412,7 +464,14 @@ export async function liveStatus(): Promise<StatusView> {
       ms: lastReport ? Date.parse(lastReport.finishedAt) - Date.parse(lastReport.startedAt) : null,
       ranAt: lastReport?.finishedAt ?? null,
     },
-    model: null,
+    model: {
+      version: LIVE_MODEL.version,
+      methodology: `${LIVE_MODEL.methodology} · trained on ${LIVE_MODEL_TRAINING.examples.toLocaleString("en-US")} real resolved reactions`,
+      trainingCutoff: LIVE_MODEL.trainingCutoff,
+      calibrationEnd: LIVE_MODEL.calibrationEnd,
+      isSynthetic: false,
+      horizons: Object.values(LIVE_MODEL.horizons).map((h) => ({ horizon: h!.horizon, trainN: h!.trainN, calN: h!.calN, calibrated: h!.calibrated, coverage: h!.calibrationCoverage, ece: h!.calibrationEce, note: h!.calibrationNote, lambda: h!.prior.lambda })),
+    },
     jobs: jobs.map((j) => ({ id: j.id, kind: j.kind, status: j.status, startedAt: j.startedAt, finishedAt: j.finishedAt, detail: typeof j.detail === "object" && j.detail && "reason" in j.detail ? String((j.detail as { reason: unknown }).reason ?? "") : "" })),
     buildMs: null,
   };

@@ -10,3 +10,5 @@ blob-report/
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+scripts/.cache/

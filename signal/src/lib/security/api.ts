@@ -3,11 +3,11 @@ import type { z } from "zod";
 
 export const MAX_BODY_BYTES = 16_384;
 
-export function json(data: unknown, init: { status?: number; cache?: "no-store" | "short" } = {}) {
+export function json(data: unknown, init: { status?: number; cache?: "no-store" | "short" | "long" } = {}) {
   return NextResponse.json(data, {
     status: init.status ?? 200,
     headers: {
-      "Cache-Control": init.cache === "short" ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store",
+      "Cache-Control": init.cache === "short" ? "public, s-maxage=30, stale-while-revalidate=120" : init.cache === "long" ? "public, s-maxage=21600, stale-while-revalidate=86400" : "no-store",
       "X-Content-Type-Options": "nosniff",
     },
   });

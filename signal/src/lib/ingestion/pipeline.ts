@@ -53,6 +53,8 @@ import { withRetry } from "./retry";
 import type { DeadLetter, RawRecord, StageName, StageStatus } from "./types";
 
 export const MAX_CARD_EXPOSURES = 5;
+/** Law-firm solicitations and paid promotions: no market information, high volume. */
+export const PROMOTIONAL = /\b(class action|law firm|investors? (alert|reminder|notice)|shareholder (alert|rights)|encourages? .{0,80}investors|with (substantial|significant) losses|securities fraud|lead plaintiff|investigation (of|on behalf)|deadline alert|sponsored|press release distribution)\b|\b(rosen|pomerantz|levi & korsinsky|bronstein|faruqi|glancy|bragar|kessler topaz|robbins geller|schall law|gross law|frank r\. cruz)\b/i;
 export const OVERLAP_WINDOW_MINUTES = 60;
 
 export interface PipelineContext {
@@ -74,6 +76,8 @@ export interface PipelineContext {
   dropIrrelevant?: boolean;
   /** Latest stored forecast per `${eventId}|${securityId}|${horizon}`; changes create linked revisions. */
   priorForecasts?: ReadonlyMap<string, ForecastSnapshot>;
+  /** Training hook: receives each resolved forecast with its model path and σ (offline model fitting only). */
+  onResolved?: (x: { path: string[]; sigmaHPct: number; horizon: ForecastSnapshot["horizon"]; securityId: string; eventId: string; subtype: string; sector: string; at: string; overlapping: boolean; realization: ForecastRealization }) => void;
 }
 
 export const forecastKey = (f: Pick<ForecastSnapshot, "eventId" | "securityId" | "horizon">) => `${f.eventId}|${f.securityId}|${f.horizon}`;
@@ -196,6 +200,7 @@ export async function runPipeline(records: readonly RawRecord[], ctx: PipelineCo
     () =>
       prepared0
         .filter((p) => detectLanguage(`${p.record.title} ${p.record.excerpt}`) === "en")
+        .filter((p) => !ctx.dropIrrelevant || !PROMOTIONAL.test(p.record.title))
         .filter((p) => !ctx.dropIrrelevant || classify(p.record).subtype !== "other.unclassified" || ctx.master.resolve(`${p.record.title} ${p.record.excerpt}`, p.record.tickers, p.publishedAt, null).verified.length > 0)
         .map((p) => {
           const r = p.record;
@@ -424,8 +429,10 @@ async function analyzeCluster(
     shock = 1;
     bucket = extraction.dealRole === "acquirer" ? "acquirer" : "target";
   } else if (subtype === "regulation.drug_approval") {
-    shock = /\b(approves|approval granted|approved)\b/i.test(text) && !/\b(rejects|complete response)\b/i.test(text) ? 1 : -1;
-    bucket = shock > 0 ? "approve" : "reject";
+    const approved = /\b(approves|approval granted|approved|wins? (fda )?approval|grants? approval)\b/i.test(text);
+    const rejected = /\b(rejects|rejected|complete response letter|declines? to approve|refuse to file|clinical hold)\b/i.test(text);
+    shock = approved && !rejected ? 1 : rejected && !approved ? -1 : 0;
+    bucket = shock > 0 ? "approve" : shock < 0 ? "reject" : "na";
   } else if (subtype === "geopolitics.oil_supply" || subtype === "sector.supply_shortage" || subtype === "company.buyback") {
     shock = 1;
   } else if (["sector.price_war", "regulation.antitrust", "regulation.export_controls", "company.cyber_incident", "company.recall", "company.credit_downgrade", "company.restatement", "company.impairment", "company.delisting_notice"].includes(subtype)) {
@@ -440,7 +447,16 @@ async function analyzeCluster(
   })();
   // Company-event subtypes need a company: without one (e.g. "China's growth beats estimates") the
   // headline is treated as general news rather than mislabelled as an earnings report.
-  if (!issuer && (subtype.startsWith("earnings.") || subtype.startsWith("company."))) {
+  // Company-event subtypes need their company in the headline, not just a passing mention.
+  const issuerInTitle = issuer ? ctx.master.mentions(issuer, primary.record.title) : false;
+  if ((!issuer || (!issuerInTitle && !primary.record.structured)) && (subtype.startsWith("earnings.") || subtype.startsWith("company.") || subtype === "regulation.drug_approval")) {
+    subtype = "other.unclassified";
+    shock = 0;
+    bucket = "na";
+  }
+  // Single-company stories ("ASML just delivered record results") are not market-wide events even
+  // when they mention "stocks": keep the company as the subject.
+  if (issuer && subtype.startsWith("market.") && ctx.master.mentions(issuer, primary.record.title)) {
     subtype = "other.unclassified";
     shock = 0;
     bucket = "na";
@@ -522,9 +538,20 @@ async function analyzeCluster(
     const k = `${n.name}|${n.role}`;
     groups.set(k, [...(groups.get(k) ?? []), n]);
   }
+  // A conflict needs two documents that each state one unambiguous value and disagree materially.
+  const fmtNum = (v: number, unit: string) => (unit === "USD" && Math.abs(v) >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : unit === "USD" && Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(0)}M` : unit === "%" ? `${v}%` : String(v));
   for (const [k, ns] of groups) {
-    const vals = new Set(ns.map((n) => n.value));
-    if (vals.size > 1) sourceConflicts.push({ text: `Sources disagree on ${k.replace("|", " ")}: ${[...vals].join(" vs ")}.`, evidenceIds: [...new Set(ns.map((n) => n.evidenceId))] });
+    if (k.startsWith("deal_value") && !subtype.startsWith("ma.")) continue;
+    const perDoc = new Map<string, Set<number>>();
+    for (const n of ns) perDoc.set(n.evidenceId, (perDoc.get(n.evidenceId) ?? new Set()).add(n.value));
+    const single = [...perDoc.entries()].filter(([, v]) => v.size === 1).map(([id, v]) => ({ id, value: [...v][0]! }));
+    if (single.length < 2) continue;
+    const vals = [...new Set(single.map((x) => x.value))];
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    if (vals.length < 2 || (hi - lo) / Math.max(Math.abs(hi), 1e-9) < 0.02) continue;
+    const unit = ns[0]!.unit;
+    sourceConflicts.push({ text: `Sources disagree on ${k.split("|")[0]!.replace(/_/g, " ")}: ${vals.map((v) => fmtNum(v, unit)).join(" vs ")}.`, evidenceIds: single.map((x) => x.id) });
   }
 
   const src = ctx.sources.get(primary.record.sourceId)!;
@@ -658,6 +685,9 @@ function scoreAndAssemble(d: Awaited<ReturnType<typeof analyzeCluster>>, ctx: Pi
           overlapping,
         });
         realizations.push(r);
+        if (ctx.onResolved && r.status === "resolved" && sigmaHPct !== null && sigmaHPct > 0) {
+          ctx.onResolved({ path: fctx.path, sigmaHPct, horizon: h, securityId: sec.id, eventId: d.id, subtype: d.subtype, sector: sec.sector, at: publishedAt, overlapping, realization: r });
+        }
       }
     }
     const ns = forecasts.find((f) => f.securityId === sec.id && f.horizon === "next_session") ?? null;

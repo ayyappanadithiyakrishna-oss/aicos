@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { SHARE_CLASS_ALIAS } from "@/lib/live/universe";
 import type { Metadata } from "next";
 import { getTicker, isDemo, getSecurityIndex } from "@/lib/data/service";
 import { toCard } from "@/lib/data/cards";
@@ -7,6 +8,9 @@ import { DIRECTION_SHORT, DIRECTION_TONE, dateET, num, signedPct, stampET, subty
 import { Chip, DemoChip, EmptyState, Panel, Pct, SectionTitle, Stat, toneText } from "@/components/ui/primitives";
 import { Monogram } from "@/components/ui/SecurityMark";
 import { TickerChart } from "@/components/charts/TickerChart";
+import { ImpliedMovePanel } from "@/components/options/ImpliedMove";
+import { Coverage } from "@/components/ticker/Coverage";
+import { KeyStats } from "@/components/ticker/KeyStats";
 import { tradingViewSymbol } from "@/lib/tradingview";
 import { ScenarioSensitivity } from "@/components/ticker/ScenarioSensitivity";
 import { WatchToggle } from "@/components/ticker/WatchToggle";
@@ -27,6 +31,8 @@ export async function generateMetadata({ params }: { params: Promise<{ symbol: s
 export default async function TickerPage({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
   if (!/^[A-Za-z][A-Za-z0-9.]{0,9}$/.test(symbol)) notFound();
+  const primary = SHARE_CLASS_ALIAS[symbol.toUpperCase()];
+  if (primary) redirect(`/ticker/${primary}`);
   const t = await getTicker(symbol);
   if (!t) notFound();
   const s = t.security;
@@ -62,12 +68,20 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
         </div>
       </header>
       {s.description ? <p className="mt-2 max-w-[75ch] text-sm text-ink-2">{s.description}</p> : null}
+      <KeyStats daily={t.daily} sessionSigmaPct={t.sessionSigmaPct ?? null} articles={t.coverage ? t.coverage.length : null} sentiment={t.sentiment ?? null} />
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-5">
           <Panel className="p-4">
             <TickerChart tvSymbol={t.mode.mode === "live" && !s.isSynthetic ? tradingViewSymbol(s.ticker, s.exchange) : null} daily={t.daily} intraday={t.intraday} markers={t.markers} sourceLabel={`${q.source}${q.entitlement === "synthetic" ? " — synthetic, not market data" : ""}`} />
           </Panel>
+
+          {t.coverage ? (
+            <Panel className="p-4">
+              <SectionTitle>Latest coverage</SectionTitle>
+              <Coverage coverage={t.coverage} sentiment={t.sentiment ?? null} asOf={t.mode.asOf} />
+            </Panel>
+          ) : null}
 
           <Panel className="p-4">
             <SectionTitle>Recent material events</SectionTitle>
@@ -194,8 +208,8 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
             <ScenarioSensitivity security={s} />
           </Panel>
           <Panel className="p-4">
-            <SectionTitle>Options-implied range</SectionTitle>
-            <p className="text-xs text-ink-3">{t.options.reason}</p>
+            <SectionTitle>Options-implied move</SectionTitle>
+            {t.mode.mode === "live" ? <ImpliedMovePanel ticker={s.ticker} modelSessionSigmaPct={t.sessionSigmaPct ?? null} /> : <p className="text-xs text-ink-3">{t.options.reason}</p>}
           </Panel>
           <Panel className="p-4" aria-labelledby="relationships">
             <SectionTitle id="relationships">Documented relationships</SectionTitle>

@@ -21,6 +21,8 @@ export const ALLOWED_HOSTS = new Set([
   "search.cnbc.com",
   "www.federalreserve.gov",
   "api.londonstrategicedge.com",
+  "api.marketaux.com",
+  "newsapi.org",
 ]);
 
 export type ProviderErrorKind = "auth" | "quota" | "rate_limited" | "upstream" | "schema" | "network" | "blocked" | "circuit_open";

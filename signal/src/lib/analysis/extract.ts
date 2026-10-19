@@ -50,6 +50,11 @@ const MACRO_INDICATORS: Record<string, string> = {
   "Initial Jobless Claims": "macro.jobless_claims",
 };
 
+/** Vendor news streams whose excerpts are often marketing or commentary rather than reporting. */
+const AGGREGATOR_SOURCES = new Set(["massive-news", "marketaux", "newsapi", "gdelt"]);
+/** Opinion and listicle formats: useful context, never an event classification. */
+const COMMENTARY = /^(is|should|could|would|can|will|why|how|what|here'?s|here is|\d+ (reasons?|stocks?|things?|key|top|dividend|growth|ai)|top \d+|best|the best|buy|sell|forget|prediction|my|i |these|this)\b|\b(key takeaways|stock (is )?a buy|worth (it|by \d{4})|investment (in|will)|could make you|millionaire|hold forever|before (it'?s too late|earnings|oct|nov|dec|jan|feb|mar|apr|may|jun|jul|aug|sep)|should you buy|is it time to|bull (vs\.?|and) bear|vs\.|1 (stock|thing))\b/i;
+
 const KEYWORD_RULES: Array<{ subtype: string; type: EventType; re: RegExp }> = [
   { subtype: "macro.cpi", type: "macro", re: /\b(cpi|consumer price index|consumer prices)\b/i },
   { subtype: "macro.payrolls", type: "macro", re: /\b(payrolls|jobs report|nonfarm)\b/i },
@@ -72,7 +77,7 @@ const KEYWORD_RULES: Array<{ subtype: string; type: EventType; re: RegExp }> = [
   { subtype: "macro.cpi", type: "macro", re: /\binflation (heats|cools|rises|falls|accelerates|eases|data|report)\b/i },
   { subtype: "market.rates", type: "macro", re: /\b(treasury yields?|bond (market|yields?|sell-?off)|10-year yield|mortgage rates)\b/i },
   { subtype: "market.oil", type: "geopolitics", re: /\b(oil prices?|crude (prices?|futures)|brent|opec)\b/i },
-  { subtype: "market.equities", type: "sector", re: /\b(stocks?|futures|nasdaq|s&p 500|dow|wall street|sell-?off|stock market)\b/i },
+  { subtype: "market.equities", type: "sector", re: /\b(stock market|stocks? (rise|rises|rose|fall|falls|fell|rally|rallies|slide|slides|drop|drops|climb|climbs|close|closed|end|ended|open|opened|mixed|futures)|stock futures|equity futures|nasdaq (composite|futures|100)|s&p 500|dow (jones|futures)|wall street (rally|sell-?off|stocks|closes|ends|opens)|market (sell-?off|rally|rout)|broad market)\b/i },
 ];
 
 export function classify(record: RawRecord): { type: EventType; subtype: string; why: string } {
@@ -97,7 +102,10 @@ export function classify(record: RawRecord): { type: EventType; subtype: string;
   }
   if (s?.earnings) return { type: "earnings", subtype: "earnings.report", why: "structured earnings payload" };
   if (s?.deal) return { type: "ma", subtype: "ma.announced", why: "structured deal payload" };
-  const text = `${record.title} ${record.excerpt}`;
+  // Aggregator news is mostly commentary: classify on the headline, and treat opinion formats as such.
+  const aggregated = AGGREGATOR_SOURCES.has(record.sourceId);
+  if (aggregated && COMMENTARY.test(record.title)) return { type: "other", subtype: "other.unclassified", why: "commentary / opinion headline" };
+  const text = aggregated ? record.title : `${record.title} ${record.excerpt}`;
   for (const r of KEYWORD_RULES) if (r.re.test(text)) return { type: r.type, subtype: r.subtype, why: `keyword: ${r.re.source.slice(0, 40)}` };
   return { type: "other", subtype: "other.unclassified", why: "no rule matched" };
 }

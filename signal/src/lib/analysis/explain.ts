@@ -49,6 +49,7 @@ function bottomLineFor(inp: ExplanationInputs): string {
       return `${issuer} is party to an announced acquisition; the target should trade toward offer terms while the acquirer weighs synergies against the premium.`;
     case "issuer_earnings":
       if (ctx.guidance === "reaffirmed" && ctx.shock === 0) return `${issuer} reaffirmed its outlook, so the read-through to estimates and documented peers looks limited absent new detail.`;
+      if (ctx.shock === 0 && ctx.bucket === "na" && ctx.magnitudeZ === null) return `${issuer} earnings are in focus, but the coverage carries no actual-versus-estimate figures, so the size and sign of any surprise are not measured.`;
       if (ctx.shock === 0) return `${issuer} reported results broadly in line with expectations, so the read-through to estimates and documented peers looks limited for now.`;
       if (ctx.subtype === "earnings.guidance" && (ctx.guidance === "raised" || ctx.guidance === "lowered")) {
         return `${issuer} ${ctx.guidance} its outlook, resetting near-term estimates with possible read-through to documented peers and suppliers.`;
