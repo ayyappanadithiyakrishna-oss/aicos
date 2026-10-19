@@ -53,7 +53,7 @@ export default async function PulsePage() {
                       </p>
                       {d.observed.length ? (
                         <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                          <span className="font-mono text-[11px] text-ink-3">Observed since publication</span>
+                          <span className="font-mono text-2xs text-ink-3">Observed since publication</span>
                           {d.observed.map((o) => (
                             <span key={o.ticker} className="inline-flex items-center gap-1.5">
                               <Link href={`/ticker/${o.ticker}`} className="font-mono font-semibold text-ink hover:text-accent">

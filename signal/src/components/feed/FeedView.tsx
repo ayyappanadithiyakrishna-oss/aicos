@@ -147,7 +147,7 @@ export function FeedView({ initial, asOf }: Props) {
               className={clsx("h-7 shrink-0 cursor-pointer rounded-md px-2.5 text-xs transition-colors", category === c.key ? "bg-surface-3 text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink")}
             >
               {c.label}
-              {c.key !== "all" && c.key !== "watchlist" ? <span className="ml-1 font-mono text-[11px] text-ink-3">{c.count}</span> : null}
+              {c.key !== "all" && c.key !== "watchlist" ? <span className="ml-1 font-mono text-2xs text-ink-3">{c.count}</span> : null}
             </button>
           ))}
         </div>
@@ -166,11 +166,11 @@ export function FeedView({ initial, asOf }: Props) {
             <Popover.Trigger asChild>
               <button type="button" className={buttonClass("outline")} aria-label="Filters">
                 <SlidersHorizontal className="size-3.5" aria-hidden /> Filters
-                {activeFilters.length ? <span className="rounded-sm bg-accent-dim px-1 font-mono text-[11px] text-accent">{activeFilters.length}</span> : null}
+                {activeFilters.length ? <span className="rounded-sm bg-accent-dim px-1 font-mono text-2xs text-accent">{activeFilters.length}</span> : null}
               </button>
             </Popover.Trigger>
             <Popover.Portal>
-              <Popover.Content align="start" sideOffset={6} collisionPadding={12} className="fade-in w-[min(340px,calc(100vw-24px))] rounded-lg border border-line-2 bg-surface p-3 shadow-xl" style={{ zIndex: "var(--z-dropdown)" }}>
+              <Popover.Content align="start" sideOffset={6} collisionPadding={12} className="mat-pop material-sheet w-[min(340px,calc(100vw-24px))] rounded-[18px] p-3" style={{ zIndex: "var(--z-dropdown)" }}>
                 <FilterForm sp={sp} setParam={setParam} />
               </Popover.Content>
             </Popover.Portal>

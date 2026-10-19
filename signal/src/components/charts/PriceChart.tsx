@@ -136,7 +136,7 @@ export function PriceChart({
               aria-checked={view === v}
               disabled={v === "intraday" ? !intraday.length : !daily.length}
               onClick={() => setView(v)}
-              className={clsx("h-6 cursor-pointer rounded-[4px] px-2 font-mono text-[11px] disabled:cursor-not-allowed disabled:opacity-40", view === v ? "bg-surface-3 text-ink" : "text-ink-3 hover:text-ink-2")}
+              className={clsx("h-6 cursor-pointer rounded-[4px] px-2 font-mono text-2xs disabled:cursor-not-allowed disabled:opacity-40", view === v ? "bg-surface-3 text-ink" : "text-ink-3 hover:text-ink-2")}
             >
               {v === "intraday" ? "30-min · 10 sessions" : "Daily · 1 year"}
             </button>

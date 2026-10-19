@@ -18,7 +18,7 @@ export function NavList({ collapsed, onNavigate }: { collapsed?: boolean; onNavi
     <nav aria-label="Primary" className="flex flex-col gap-4">
       {groups.map((g) => (
         <div key={g}>
-          {!collapsed ? <div className="mb-1 px-2.5 text-[11px] font-semibold text-ink-3">{g}</div> : <div className="mx-2.5 mb-1 h-px bg-line" />}
+          {!collapsed ? <div className="mb-1 px-2.5 text-2xs font-semibold text-ink-3">{g}</div> : <div className="mx-2.5 mb-1 h-px bg-line" />}
           <ul className="flex flex-col gap-px">
             {NAV.filter((n) => n.group === g).map((n) => {
               const active = isActive(pathname, n.href);
@@ -31,7 +31,7 @@ export function NavList({ collapsed, onNavigate }: { collapsed?: boolean; onNavi
                     aria-current={active ? "page" : undefined}
                     title={collapsed ? n.label : undefined}
                     className={clsx(
-                      "group flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors duration-150",
+                      "press group flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors duration-150",
                       active ? "bg-surface-3 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
                       collapsed && "justify-center px-0",
                     )}
@@ -75,7 +75,7 @@ export function SideNav() {
   return (
     <aside
       className={clsx(
-        "sticky top-[var(--chrome-h)] hidden h-[calc(100dvh-var(--chrome-h))] shrink-0 flex-col border-r border-line bg-raised/80 py-3 backdrop-blur lg:flex",
+        "sticky top-[var(--chrome-h)] hidden h-[calc(100dvh-var(--chrome-h))] shrink-0 flex-col material-side border-r border-line py-3 lg:flex",
         collapsed ? "w-14 px-1.5" : "w-[228px] px-2",
       )}
       style={{ zIndex: "var(--z-nav)" }}

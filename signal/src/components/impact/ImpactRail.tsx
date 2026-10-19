@@ -26,13 +26,13 @@ function WhyPopover({ x, horizon, children }: { x: CardExposure; horizon: Horizo
     <Popover.Root>
       <Popover.Trigger asChild>{children}</Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content sideOffset={6} collisionPadding={12} className="fade-in w-[min(380px,calc(100vw-24px))] rounded-[18px] bg-surface p-4 text-sm shadow-[0_8px_40px_rgb(0_0_0/0.18)]" style={{ zIndex: "var(--z-dropdown)" }}>
+        <Popover.Content sideOffset={6} collisionPadding={12} className="mat-pop material-sheet w-[min(380px,calc(100vw-24px))] rounded-[18px] p-4 text-sm" style={{ zIndex: "var(--z-dropdown)" }}>
           <div className="flex items-start gap-2.5">
             <Monogram ticker={x.ticker} size={28} />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-semibold text-ink">{x.ticker}</span>
-                <span className="rounded-sm bg-surface-3 px-1 font-mono text-[11px] text-ink-2">{x.directness === "direct" ? "Direct" : "Second-order"}</span>
+                <span className="rounded-sm bg-surface-3 px-1 font-mono text-2xs text-ink-2">{x.directness === "direct" ? "Direct" : "Second-order"}</span>
               </div>
               <div className="truncate text-xs text-ink-3">{x.name}</div>
             </div>
@@ -59,7 +59,7 @@ function WhyPopover({ x, horizon, children }: { x: CardExposure; horizon: Horizo
               <>
                 <div className="mt-1.5 flex items-center gap-3">
                   <span className={clsx("text-sm font-medium", toneText[DIRECTION_TONE[f.direction]])}>{DIRECTION_LABEL[f.direction]}</span>
-                  <ForecastFigure f={f} className="text-sm" />
+                  {f.direction !== "insufficient" ? <ForecastFigure f={f} className="text-sm" /> : null}
                   <IntervalBar central={f.central} lo={f.lo} hi={f.hi} band={f.band} direction={f.direction} width={96} label={x.ticker} />
                 </div>
                 <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-2xs">
@@ -134,7 +134,7 @@ export function TickerChip({ x, horizon, scale }: { x: CardExposure; horizon: Ho
             <span className={clsx("text-2xs font-medium", toneText[DIRECTION_TONE[dir]])}>{DIRECTION_SHORT[dir]}</span>
           </span>
           <span className="flex items-center gap-1.5 text-2xs">
-            <ForecastFigure f={f} />
+            {dir !== "insufficient" ? <ForecastFigure f={f} /> : <span className="text-ink-3">Not enough history</span>}
             {f?.probs ? <span className="num font-mono text-ink-3">P↑{pct(f.probs.up)}</span> : null}
           </span>
         </span>
@@ -158,7 +158,7 @@ export function ImpactRail({ exposures, horizon, max = 4 }: { exposures: CardExp
       {[["Direct", direct] as const, ["Second-order", second] as const].map(([label, xs]) =>
         xs.length ? (
           <div key={label} className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="w-full text-[11px] text-ink-3 sm:w-auto sm:pr-1">{label}</span>
+            <span className="w-full text-2xs text-ink-3 sm:w-auto sm:pr-1">{label}</span>
             {xs.map((x) => (
               <TickerChip key={x.securityId} x={x} horizon={horizon} scale={scale} />
             ))}

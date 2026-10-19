@@ -98,7 +98,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                 {card.facts.map((f, i) => (
                   <li key={i} className="text-sm text-ink">
                     {f.text}
-                    <div className="mt-0.5 font-mono text-[11px] text-ink-3">
+                    <div className="mt-0.5 font-mono text-2xs text-ink-3">
                       Confirmed fact
                       {f.evidence ? (
                         <>

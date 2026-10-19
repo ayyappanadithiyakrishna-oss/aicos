@@ -48,9 +48,9 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       onOpenChange={onOpenChange}
       label="Search SIGNAL"
       shouldFilter={false}
-      className="fixed left-1/2 top-[12vh] w-[min(640px,calc(100vw-32px))] -translate-x-1/2 overflow-hidden rounded-lg border border-line-2 bg-surface shadow-2xl"
-      overlayClassName="fixed inset-0 bg-black/50 backdrop-blur-[2px]"
-      contentClassName="contents"
+      className="material-sheet overflow-hidden rounded-[18px]"
+      overlayClassName="mat-scrim fixed inset-0 bg-black/40"
+      contentClassName="mat-dialog fixed left-1/2 top-[12vh] w-[min(640px,calc(100vw-32px))] -translate-x-1/2"
       style={{ zIndex: "var(--z-modal)" }}
     >
       <div className="flex items-center gap-2 border-b border-line px-3">

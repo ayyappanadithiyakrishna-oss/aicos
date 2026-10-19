@@ -77,7 +77,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
                   const mine = c.exposures.filter((x) => x.securityId === s.id);
                   return (
                     <li key={e.id} className="py-3 first:pt-0">
-                      <div className="font-mono text-[11px] text-ink-3">
+                      <div className="font-mono text-2xs text-ink-3">
                         {subtypeLabel(e.subtype)} · {stampET(e.firstPublishedAt, t.mode.asOf)}
                       </div>
                       <Link href={`/events/${e.id}`} className="mt-0.5 block font-serif text-md text-ink hover:text-accent-strong">

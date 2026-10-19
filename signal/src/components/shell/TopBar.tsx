@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import clsx from "clsx";
-import { Menu, Search, Settings, Star, X } from "lucide-react";
+import { Search, Settings, Star } from "lucide-react";
 import type { ModeInfo } from "@/lib/data/views";
 import { useClientState } from "@/lib/client/store";
 import { CommandPalette } from "./CommandPalette";
-import { NavList } from "./SideNav";
+import { NavSheet } from "./NavSheet";
 import { AlertsBell } from "./AlertsBell";
 import { NAV } from "./nav";
 import { Kbd } from "@/components/ui/primitives";
@@ -85,29 +85,9 @@ export function TopBar({ mode }: { mode: ModeInfo }) {
 
   const state = mode.clock.state;
   return (
-    <header className="sticky top-0 text-[var(--nav-ink)] backdrop-blur-xl" style={{ zIndex: "var(--z-sticky)", background: "var(--nav-bg)" }}>
+    <header className="material-chrome sticky top-0 text-[var(--nav-ink)]" style={{ zIndex: "var(--z-sticky)" }}>
       <div className="flex h-11 items-center gap-2 px-3 sm:gap-3 sm:px-4 [&_.text-ink]:text-[var(--nav-ink)] [&_.text-ink-2]:text-[var(--nav-ink-2)] [&_.text-ink-3]:text-[var(--nav-ink-2)]">
-        <Dialog.Root open={navOpen} onOpenChange={setNavOpen}>
-          <Dialog.Trigger asChild>
-            <button type="button" className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-ink-2 hover:bg-white/10 hover:text-white lg:hidden" aria-label="Open navigation">
-              <Menu className="size-5" />
-            </button>
-          </Dialog.Trigger>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-black/50" style={{ zIndex: "var(--z-overlay)" }} />
-            <Dialog.Content className="fade-in fixed inset-y-0 left-0 flex w-[min(300px,86vw)] flex-col border-r border-line bg-raised p-3" style={{ zIndex: "var(--z-modal)" }} aria-describedby={undefined}>
-              <div className="mb-3 flex items-center justify-between">
-                <Dialog.Title className="font-mono text-sm font-semibold text-ink">SIGNAL</Dialog.Title>
-                <Dialog.Close className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-ink-2 hover:bg-surface-2" aria-label="Close navigation">
-                  <X className="size-5" />
-                </Dialog.Close>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <NavList onNavigate={() => setNavOpen(false)} />
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
+        <NavSheet open={navOpen} onOpenChange={setNavOpen} />
 
         <Link href="/" className="flex items-center gap-2" aria-label="SIGNAL home">
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
@@ -118,7 +98,7 @@ export function TopBar({ mode }: { mode: ModeInfo }) {
           <span className="text-[15px] font-semibold text-ink">Signal</span>
         </Link>
         {mode.mode === "demo" ? (
-          <span className="hidden rounded-full bg-[#ff9f0a]/20 px-2 text-[11px] font-medium text-[#ffb340] sm:inline">Demo</span>
+          <span className="hidden rounded-full bg-[#ff9f0a]/25 px-2 text-2xs font-medium text-[#ffd08a] sm:inline">Demo</span>
         ) : null}
 
         <button
@@ -157,8 +137,8 @@ export function TopBar({ mode }: { mode: ModeInfo }) {
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <Dialog.Root open={help} onOpenChange={setHelp}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50" style={{ zIndex: "var(--z-overlay)" }} />
-          <Dialog.Content className="fade-in fixed left-1/2 top-[15vh] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 rounded-lg border border-line-2 bg-surface p-4" style={{ zIndex: "var(--z-modal)" }} aria-describedby={undefined}>
+          <Dialog.Overlay className="mat-scrim fixed inset-0 bg-black/40" style={{ zIndex: "var(--z-overlay)" }} />
+          <Dialog.Content className="mat-dialog material-sheet fixed left-1/2 top-[15vh] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 rounded-[18px] p-5" style={{ zIndex: "var(--z-modal)" }} aria-describedby={undefined}>
             <Dialog.Title className="mb-3 text-md font-semibold">Keyboard shortcuts</Dialog.Title>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
               <dt><Kbd>⌘ K</Kbd> / <Kbd>/</Kbd></dt>

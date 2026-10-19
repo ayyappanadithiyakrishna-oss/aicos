@@ -42,7 +42,7 @@ export function HorizonToggle({ value, onChange, id }: { value: Horizon; onChang
           aria-checked={value === h}
           id={`${id}-${h}`}
           onClick={() => onChange(h)}
-          className={clsx("h-6 cursor-pointer rounded-full px-2.5 text-[11px] font-medium transition-colors", value === h ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.12)]" : "text-ink-2 hover:text-ink")}
+          className={clsx("h-6 cursor-pointer rounded-full px-2.5 text-2xs font-medium transition-colors", value === h ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.12)]" : "text-ink-2 hover:text-ink")}
           title={HORIZON_LONG[h]}
         >
           {HORIZON_SHORT[h]}
@@ -126,7 +126,7 @@ export function EventCard({ card, asOf, focused, defaultHorizon = "next_session"
                 <span aria-hidden className="mt-[7px] size-1 shrink-0 rounded-full bg-ink-3" />
                 <span className="min-w-0">
                   {f.text}{" "}
-                  <span className="whitespace-nowrap font-mono text-[11px] text-ink-3">
+                  <span className="whitespace-nowrap font-mono text-2xs text-ink-3">
                     {LABEL_TEXT[f.label] ?? f.label}
                     {f.evidence ? (
                       <>

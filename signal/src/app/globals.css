@@ -34,9 +34,9 @@
   --focus: #0071e3;
   --shadow: none;
   --grid: rgb(0 0 0 / 0.035);
-  --nav-bg: rgb(22 22 23 / 0.92);
+  --nav-bg: rgb(22 22 23 / 0.8);
   --nav-ink: rgb(255 255 255 / 0.92);
-  --nav-ink-2: rgb(255 255 255 / 0.62);
+  --nav-ink-2: rgb(255 255 255 / 0.76);
   color-scheme: light;
 }
 
@@ -64,9 +64,9 @@
   --focus: #2997ff;
   --shadow: none;
   --grid: rgb(255 255 255 / 0.04);
-  --nav-bg: rgb(22 22 23 / 0.92);
+  --nav-bg: rgb(22 22 23 / 0.8);
   --nav-ink: rgb(255 255 255 / 0.92);
-  --nav-ink-2: rgb(255 255 255 / 0.62);
+  --nav-ink-2: rgb(255 255 255 / 0.76);
   color-scheme: dark;
 }
 
@@ -98,28 +98,40 @@
   --font-mono: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--ff-sans), "Helvetica Neue", system-ui, sans-serif;
 
   /* Fixed product scale (~1.15 ratio). */
+  /* Tracking is size-specific (SF tracking table): small text opens up,
+     large text tightens. Leading runs inversely to size. */
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
+  --text-2xs--letter-spacing: 0.006em;
   --text-xs: 0.75rem;
   --text-xs--line-height: 1.05rem;
+  --text-xs--letter-spacing: 0;
   --text-sm: 0.8125rem;
   --text-sm--line-height: 1.2rem;
+  --text-sm--letter-spacing: -0.006em;
   --text-base: 0.875rem;
   --text-base--line-height: 1.35rem;
+  --text-base--letter-spacing: -0.01em;
   --text-md: 1rem;
   --text-md--line-height: 1.45rem;
+  --text-md--letter-spacing: -0.016em;
   --text-lg: 1.125rem;
-  --text-lg--line-height: 1.55rem;
+  --text-lg--line-height: 1.5rem;
+  --text-lg--letter-spacing: -0.018em;
   --text-xl: 1.3125rem;
-  --text-xl--line-height: 1.7rem;
+  --text-xl--line-height: 1.6rem;
+  --text-xl--letter-spacing: -0.02em;
   --text-2xl: 1.5rem;
-  --text-2xl--line-height: 1.9rem;
+  --text-2xl--line-height: 1.8rem;
+  --text-2xl--letter-spacing: -0.021em;
 
   --radius-sm: 5px;
   --radius-md: 8px;
   --radius-lg: 18px;
 
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  /* Critically damped spring (damping 1.0, response ~0.35s) for non-gesture motion. */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* Semantic z-index scale. */
@@ -143,7 +155,8 @@ body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: var(--text-base--line-height);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--text-base--letter-spacing);
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -153,8 +166,101 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
-  letter-spacing: -0.022em;
 }
+
+/* Display titles: tight leading and negative tracking as type grows. */
+.display {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  letter-spacing: -0.021em;
+  font-weight: 600;
+}
+
+/* Theme switches ease instead of flashing. */
+html {
+  transition: background-color 240ms ease, color 240ms ease;
+}
+
+/* Response: feedback on press, instantly. Commit still happens on release. */
+button:not(:disabled),
+.press {
+  transition-property: color, background-color, box-shadow, transform;
+  transition-duration: 150ms, 150ms, 150ms, 100ms;
+  transition-timing-function: ease-out;
+}
+button:not(:disabled):active,
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Materials: translucent chrome that content scrolls under. */
+.material-chrome {
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.material-side {
+  background: color-mix(in srgb, var(--bg-raised) 78%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.material-sheet {
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  backdrop-filter: saturate(180%) blur(30px);
+  box-shadow: 0 0 0 0.5px var(--line-2), 0 12px 48px rgb(0 0 0 / 0.16);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .material-chrome { background: rgb(22 22 23); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .material-side { background: var(--bg-raised); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .material-sheet { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .material-chrome { background: #000; box-shadow: 0 1px 0 #fff; }
+  .material-side, .material-sheet { background: var(--surface); box-shadow: 0 0 0 1px var(--ink); }
+}
+
+/* Materialize, don't just fade: blur, scale and opacity move together.
+   Popovers grow from their trigger; exits retrace the entry path. */
+:root {
+  --mat-scale: 0.96;
+  --mat-blur: 6px;
+  --mat-shift: 6px;
+}
+.mat-pop {
+  transform-origin: var(--radix-popover-content-transform-origin, top center);
+}
+.mat-pop[data-state="open"],
+.mat-dialog[data-state="open"],
+.mat-dialog:not([data-state]) {
+  animation: mat-in 300ms var(--ease-spring) both;
+}
+.mat-pop[data-state="closed"],
+.mat-dialog[data-state="closed"] {
+  animation: mat-out 180ms var(--ease-spring) both;
+}
+.mat-dialog {
+  transform-origin: top center;
+}
+@keyframes mat-in {
+  from { opacity: 0; transform: scale(var(--mat-scale)); filter: blur(var(--mat-blur)); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes mat-out {
+  from { opacity: 1; transform: none; filter: none; }
+  to { opacity: 0; transform: scale(var(--mat-scale)); filter: blur(var(--mat-blur)); }
+}
+/* Scrims dim to focus. */
+.mat-scrim[data-state="open"] { animation: scrim-in 300ms var(--ease-spring) both; }
+.mat-scrim[data-state="closed"] { animation: scrim-out 180ms var(--ease-spring) both; }
+@keyframes scrim-in { from { opacity: 0; } }
+@keyframes scrim-out { to { opacity: 0; } }
+/* Left sheet enters from the left and leaves the same way. */
+.mat-sheet-left[data-state="open"] { animation: sheet-in 340ms var(--ease-spring) both; }
+.mat-sheet-left[data-state="closed"]:not([data-flung]) { animation: sheet-out 220ms var(--ease-spring) both; }
+.mat-sheet-left[data-state="closed"][data-flung] { animation: scrim-out 1ms both; }
+@keyframes sheet-in { from { transform: translateX(-100%); } }
+@keyframes sheet-out { to { transform: translateX(-100%); } }
 
 p {
   text-wrap: pretty;
@@ -211,7 +317,7 @@ p {
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translateY(var(--mat-shift));
   }
   to {
     opacity: 1;
@@ -247,15 +353,26 @@ p {
   }
 }
 
+/* Reduced motion keeps feedback but makes it non-vestibular: cross-fades
+   replace scale, blur, slides and loops. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --mat-scale: 1;
+    --mat-blur: 0px;
+    --mat-shift: 0px;
+  }
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+  .mat-sheet-left[data-state="open"] { animation-name: scrim-in; }
+  .mat-sheet-left[data-state="closed"]:not([data-flung]) { animation-name: scrim-out; }
+  button:not(:disabled):active,
+  .press:active { transform: none; }
+  .live-dot,
+  .skeleton { animation: none; }
+  .collapse-grid { transition: none; }
 }
 
 /* Scrollable chip rows: contained horizontal scroll, never the page. */

@@ -58,7 +58,7 @@ export function AlertsBell() {
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content align="end" sideOffset={6} className="fade-in w-[min(360px,calc(100vw-24px))] rounded-lg border border-line-2 bg-surface p-2 shadow-xl" style={{ zIndex: "var(--z-dropdown)" }}>
+        <Popover.Content align="end" sideOffset={6} className="mat-pop material-sheet w-[min(360px,calc(100vw-24px))] rounded-[18px] p-2" style={{ zIndex: "var(--z-dropdown)" }}>
           <div className="flex items-center justify-between px-2 py-1">
             <span className="text-xs font-semibold text-ink">In-app alerts</span>
             {unread ? (
