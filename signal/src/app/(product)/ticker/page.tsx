@@ -12,13 +12,13 @@ export default async function TickerIndex() {
   const list = await getSecurityIndex();
   const groups = [
     ["Benchmarks & proxies", list.filter((s) => s.kind !== "equity")],
-    ["Equities", list.filter((s) => s.kind === "equity")],
+    [isDemo() ? "Equities" : "Largest companies", list.filter((s) => s.kind === "equity")],
   ] as const;
   return (
     <div className="mx-auto max-w-[1100px]">
       <PageHeader
         title="Ticker intelligence"
-        description={isDemo() ? "Every demo security is fictional. Open one to see its price path, linked events, relationship evidence and forecast track record." : "Search any symbol in the SEC company directory. Prices appear only with an entitled price provider."}
+        description={isDemo() ? "Every demo security is fictional. Open one to see its price path, linked events, relationship evidence and forecast track record." : "Coverage is US-listed companies worth $10 billion or more, plus the major index ETFs. Largest companies first."}
       />
       <TickerSearch />
       {groups.map(([label, xs]) =>

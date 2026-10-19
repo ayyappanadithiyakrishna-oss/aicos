@@ -13,6 +13,7 @@ import { logReturnPct } from "@/lib/quant/returns";
 import { minMetricSample } from "@/lib/config/env";
 import { FRED_SERIES, latestRelease } from "@/lib/providers/fred";
 import { blsReleases } from "@/lib/providers/free";
+import { calendarAt, lseUsCalendar, parseFigure, type LseCalendarRow } from "@/lib/providers/lse";
 import { liveMaster, runLiveIngest, type IngestReport } from "@/lib/live/jobs";
 import { LivePriceStore } from "@/lib/live/prices";
 import { LIVE_PROXIES } from "@/lib/live/master";
@@ -141,7 +142,7 @@ export async function liveTicker(symbol: string): Promise<TickerView | null> {
     security: sec,
     quote: { securityId: sec.id, ticker: sec.ticker, last: last?.c ?? null, changePct: last && prev ? Math.round(logReturnPct(prev.c, last.c) * 100) / 100 : null, asOf: last?.t ?? null, entitlement: last ? "delayed" : "none", delayMinutes: null, source: prices.source },
     daily: daily.slice(-260),
-    intraday: [],
+    intraday: (prices.intraday(sec.id) ?? []).slice(-130),
     markers: evs.map((e) => ({ at: e.firstPublishedAt, eventId: e.id, label: e.subtype.split(".").pop()!.replace(/_/g, " "), severity: e.severity })),
     events: evs,
     impactHistory: fs.slice(0, 40).map((f) => {
@@ -195,7 +196,14 @@ export async function liveMacro(): Promise<{ mode: ModeInfo; rows: MacroRow[] }>
   const now = new Date();
   const cfg = liveConfig();
   const rows: MacroRow[] = [];
-  if (cfg.fredKey) {
+  if (cfg.lseKey) {
+    try {
+      rows.push(...lseMacroRows(await lseUsCalendar(cfg.lseKey, now), now));
+    } catch {
+      // Outage shows on Data Status; fall through to FRED/BLS below.
+    }
+  }
+  if (!rows.length && cfg.fredKey) {
     for (const spec of FRED_SERIES) {
       try {
         const r = await latestRelease(cfg.fredKey, spec);
@@ -262,8 +270,90 @@ export async function liveEarningsAndFilings(): Promise<{ mode: ModeInfo; earnin
   return { mode: modeInfo(new Date()), earnings: [], filings };
 }
 
+/** US releases the macro radar tracks (London Strategic Edge calendar names). */
+const KEY_RELEASES: Array<{ event: string; label: string }> = [
+  { event: "Inflation Rate YoY", label: "CPI (YoY)" },
+  { event: "Core Inflation Rate YoY", label: "Core CPI (YoY)" },
+  { event: "Inflation Rate MoM", label: "CPI (MoM)" },
+  { event: "Non Farm Payrolls", label: "Nonfarm Payrolls" },
+  { event: "Unemployment Rate", label: "Unemployment Rate" },
+  { event: "Core PCE Price Index YoY", label: "Core PCE (YoY)" },
+  { event: "GDP Growth Rate QoQ", label: "GDP (QoQ, annualized)" },
+  { event: "Retail Sales MoM", label: "Retail Sales (MoM)" },
+  { event: "ISM Manufacturing PMI", label: "ISM Manufacturing PMI" },
+  { event: "ISM Services PMI", label: "ISM Services PMI" },
+  { event: "Fed Interest Rate Decision", label: "Fed funds rate decision" },
+  { event: "Initial Jobless Claims", label: "Initial Jobless Claims" },
+  { event: "JOLTs Job Openings", label: "JOLTS Job Openings" },
+  { event: "Michigan Consumer Sentiment", label: "Michigan Consumer Sentiment" },
+  { event: "PPI MoM", label: "PPI (MoM)" },
+];
+const LSE_CAL_SOURCE = "London Strategic Edge economic calendar";
+
+function lseMacroRows(cal: LseCalendarRow[], now: Date): MacroRow[] {
+  const out: MacroRow[] = [];
+  for (const k of KEY_RELEASES) {
+    const all = cal.filter((r) => r.event === k.event).sort((a, b) => a.datetime.localeCompare(b.datetime));
+    const released = all.filter((r) => r.actual !== null && Date.parse(calendarAt(r)) <= now.getTime()).at(-1);
+    const next = all.find((r) => Date.parse(calendarAt(r)) > now.getTime());
+    for (const r of [released, next]) {
+      if (!r) continue;
+      const actual = parseFigure(r.actual);
+      const prior = parseFigure(r.previous);
+      const cons = parseFigure(r.consensus ?? r.forecast);
+      const unit = actual?.unit ?? prior?.unit ?? cons?.unit ?? "";
+      const same = (f: { value: number; unit: string } | null) => (f && f.unit === unit ? f.value : null);
+      const consensus = same(cons);
+      out.push({
+        id: `lse-${k.event}-${r.datetime}`.replace(/\W+/g, "-").toLowerCase(),
+        indicator: k.label,
+        period: r.period_hint ?? "",
+        releaseAt: calendarAt(r),
+        releaseTimeKnown: true,
+        status: r === released ? "released" : "upcoming",
+        unit: unit === "INDEX" ? "index" : unit,
+        actual: actual?.value ?? null,
+        consensus,
+        consensusSource: consensus !== null ? LSE_CAL_SOURCE : null,
+        prior: same(prior),
+        revisedPrior: null,
+        surprise: actual
+          ? computeMacroSurprise({ indicator: k.label, unit, actual: actual.value, prior: same(prior), revisedPrior: null }, consensus !== null ? { value: consensus, unit, source: LSE_CAL_SOURCE, licensed: true } : null)
+          : null,
+        source: LSE_CAL_SOURCE,
+        eventId: null,
+        isSynthetic: false,
+      });
+    }
+  }
+  return out.sort((a, b) => (a.status === b.status ? b.releaseAt.localeCompare(a.releaseAt) : a.status === "released" ? -1 : 1));
+}
+
 export async function liveCalendar(): Promise<CalendarItem[]> {
-  return [];
+  const cfg = liveConfig();
+  if (!cfg.lseKey) return [];
+  const now = new Date();
+  try {
+    const cal = await lseUsCalendar(cfg.lseKey, now);
+    const tracked = new Map(KEY_RELEASES.map((k) => [k.event, k.label]));
+    return cal
+      .filter((r) => tracked.has(r.event) && Date.parse(calendarAt(r)) > now.getTime() - 3_600_000)
+      .sort((a, b) => a.datetime.localeCompare(b.datetime))
+      .slice(0, 40)
+      .map((r) => ({
+        id: `lse-cal-${r.event}-${r.datetime}`.replace(/\W+/g, "-").toLowerCase(),
+        at: calendarAt(r),
+        dateConfirmed: true,
+        kind: r.event.startsWith("Fed ") ? ("policy" as const) : ("macro" as const),
+        title: `${tracked.get(r.event)}${r.period_hint ? ` · ${r.period_hint}` : ""}`,
+        tickers: [],
+        consensusNote: r.consensus ? `Consensus ${r.consensus}${r.previous ? ` · prior ${r.previous}` : ""}` : r.previous ? `Prior ${r.previous}` : null,
+        source: LSE_CAL_SOURCE,
+        isSynthetic: false,
+      }));
+  } catch {
+    return [];
+  }
 }
 
 export async function liveScorecard(): Promise<ScorecardView> {
@@ -332,9 +422,14 @@ export async function liveSearch(q: string): Promise<SearchHit[]> {
   const needle = q.trim().toLowerCase();
   if (!needle) return [];
   const master = await liveMaster();
+  // Exact ticker, then ticker prefix, then company name; ties keep market-cap order.
+  const rank = (s: { ticker: string; name: string }) => (s.ticker.toLowerCase() === needle ? 0 : s.ticker.toLowerCase().startsWith(needle) ? 1 : s.name.toLowerCase().includes(needle) ? 2 : 3);
   const tickers = master.securities
-    .filter((s) => s.ticker.toLowerCase() === needle || s.ticker.toLowerCase().startsWith(needle) || s.name.toLowerCase().includes(needle))
+    .map((s, i) => ({ s, r: rank(s), i }))
+    .filter((x) => x.r < 3)
+    .sort((a, b) => a.r - b.r || a.i - b.i)
     .slice(0, 8)
+    .map(({ s }) => s)
     .map((s) => ({ kind: "ticker" as const, id: s.id, label: s.ticker, sublabel: s.name, href: `/ticker/${s.ticker}` }));
   const evs = (await getRepository().listEvents(300)).filter((e) => `${e.bottomLine} ${e.originalTitle}`.toLowerCase().includes(needle)).slice(0, 6);
   return [...tickers, ...evs.map((e) => ({ kind: "event" as const, id: e.id, label: e.originalTitle, sublabel: e.subtype, href: `/events/${e.id}` }))];

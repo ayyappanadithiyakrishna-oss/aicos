@@ -6,7 +6,8 @@ import { toCard } from "@/lib/data/cards";
 import { DIRECTION_SHORT, DIRECTION_TONE, dateET, num, signedPct, stampET, subtypeLabel, timeET, TIER_SHORT } from "@/lib/format";
 import { Chip, DemoChip, EmptyState, Panel, Pct, SectionTitle, Stat, toneText } from "@/components/ui/primitives";
 import { Monogram } from "@/components/ui/SecurityMark";
-import { PriceChart } from "@/components/charts/PriceChart";
+import { TickerChart } from "@/components/charts/TickerChart";
+import { tradingViewSymbol } from "@/lib/tradingview";
 import { ScenarioSensitivity } from "@/components/ticker/ScenarioSensitivity";
 import { WatchToggle } from "@/components/ticker/WatchToggle";
 import { ImpactRail } from "@/components/impact/ImpactRail";
@@ -65,7 +66,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-5">
           <Panel className="p-4">
-            <PriceChart daily={t.daily} intraday={t.intraday} markers={t.markers} sourceLabel={`${q.source}${q.entitlement === "synthetic" ? " — synthetic, not market data" : ""}`} />
+            <TickerChart tvSymbol={t.mode.mode === "live" && !s.isSynthetic ? tradingViewSymbol(s.ticker, s.exchange) : null} daily={t.daily} intraday={t.intraday} markers={t.markers} sourceLabel={`${q.source}${q.entitlement === "synthetic" ? " — synthetic, not market data" : ""}`} />
           </Panel>
 
           <Panel className="p-4">

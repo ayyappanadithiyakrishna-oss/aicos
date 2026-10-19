@@ -20,6 +20,7 @@ export const ALLOWED_HOSTS = new Set([
   "www.nasdaqtrader.com",
   "search.cnbc.com",
   "www.federalreserve.gov",
+  "api.londonstrategicedge.com",
 ]);
 
 export type ProviderErrorKind = "auth" | "quota" | "rate_limited" | "upstream" | "schema" | "network" | "blocked" | "circuit_open";

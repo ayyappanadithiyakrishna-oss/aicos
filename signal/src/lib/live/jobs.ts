@@ -16,7 +16,8 @@ import { PointInTimeView, trailingBeta, trailingDailyVol } from "@/lib/quant/fea
 import { fetchCompanyTickers, fetchCurrentFilings, filingToRecord } from "@/lib/providers/sec";
 import { FRED_SERIES, latestRelease, releaseToRecord } from "@/lib/providers/fred";
 import { fmpLatestNews, massiveNews } from "@/lib/providers/vendors";
-import { RSS_FEEDS, fetchRss, gdeltNews, nasdaqDirectory } from "@/lib/providers/free";
+import { RSS_FEEDS, fetchRss, gdeltNews } from "@/lib/providers/free";
+import { UNIVERSE } from "./universe";
 import { buildLiveMaster, LIVE_PROXIES } from "./master";
 import { LivePriceStore } from "./prices";
 import { anyLiveProvider, liveConfig, liveSources, type LiveConfig } from "./registry";
@@ -39,26 +40,17 @@ export interface IngestReport {
 let masterCache: { at: number; companies: Security[] } | null = null;
 
 async function securities(cfg: LiveConfig, errors: IngestReport["errors"]): Promise<Security[]> {
-  if (!cfg.secUa) {
-    if (!cfg.free) return [];
-    if (masterCache && Date.now() - masterCache.at < 24 * 3_600_000) return masterCache.companies;
-    try {
-      const companies = await nasdaqDirectory();
-      masterCache = { at: Date.now(), companies };
-      return companies;
-    } catch (e) {
-      errors.push({ provider: "nasdaqtrader", error: e instanceof Error ? e.message : String(e) });
-      return masterCache?.companies ?? [];
-    }
-  }
+  // Coverage is the $10B+ universe. SEC's directory (when configured) only contributes CIKs.
+  if (!cfg.secUa) return UNIVERSE;
   if (masterCache && Date.now() - masterCache.at < 24 * 3_600_000) return masterCache.companies;
   try {
-    const companies = await fetchCompanyTickers(cfg.secUa);
+    const cik = new Map((await fetchCompanyTickers(cfg.secUa)).map((c) => [c.ticker, c.cik]));
+    const companies = UNIVERSE.map((u) => ({ ...u, cik: cik.get(u.ticker) }));
     masterCache = { at: Date.now(), companies };
     return companies;
   } catch (e) {
     errors.push({ provider: "sec", error: `symbol directory: ${e instanceof Error ? e.message : String(e)}` });
-    return masterCache?.companies ?? [];
+    return masterCache?.companies ?? UNIVERSE;
   }
 }
 

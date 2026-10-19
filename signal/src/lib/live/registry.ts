@@ -16,6 +16,8 @@ export interface LiveConfig {
   massiveKey: string | null;
   massiveDisplay: boolean;
   llm: boolean;
+  /** London Strategic Edge vault key: candles, fundamentals, economic calendar with consensus. */
+  lseKey: string | null;
   /** Free keyless sources (RSS, GDELT, Yahoo chart, BLS, Nasdaq directory). On unless LIVE_FREE_SOURCES=false. */
   free: boolean;
 }
@@ -31,14 +33,16 @@ export function liveConfig(env: NodeJS.ProcessEnv = process.env): LiveConfig {
     massiveDisplay: env.MASSIVE_DISPLAY_LICENSE === "confirmed",
     llm: Boolean(env.ANTHROPIC_API_KEY) && env.LLM_PROCESSING_ALLOWED === "true",
     free: env.LIVE_FREE_SOURCES !== "false",
+    lseKey: env.LSE_API_KEY || null,
   };
 }
 
 export function anyLiveProvider(c: LiveConfig): boolean {
-  return Boolean(c.free || c.secUa || c.fredKey || (c.fmpKey && c.fmpDisplay) || (c.massiveKey && c.massiveDisplay));
+  return Boolean(c.free || c.lseKey || c.secUa || c.fredKey || (c.fmpKey && c.fmpDisplay) || (c.massiveKey && c.massiveDisplay));
 }
 
-export function priceProvider(c: LiveConfig): "fmp" | "massive" | "yahoo" | null {
+export function priceProvider(c: LiveConfig): "lse" | "fmp" | "massive" | "yahoo" | null {
+  if (c.lseKey) return "lse";
   if (c.fmpKey && c.fmpDisplay) return "fmp";
   if (c.massiveKey && c.massiveDisplay) return "massive";
   if (c.free) return "yahoo";
@@ -77,9 +81,10 @@ export function liveProviderViews(c: LiveConfig): ProviderHealthView[] {
     view("cnbc", "CNBC RSS feeds", ["company_news", "macro_news"], free, free, "Headlines, teasers and links from CNBC's public RSS feeds."),
     view("fed", "Federal Reserve press RSS", ["policy", "regulation"], free, free, "Official press releases (public domain)."),
     view("gdelt", "GDELT news index", ["news"], free, free, "Open global news index; headline + link only; ≤1 request / 5 s."),
-    view("yahoo", "Yahoo Finance chart (unofficial)", ["prices"], free, free, "Free delayed daily and 30-minute bars; no SLA; research display only."),
+    view("lse", "London Strategic Edge", ["prices", "intraday", "fundamentals", "macro_consensus", "logos"], Boolean(c.lseKey), Boolean(c.lseKey), c.lseKey ? "Daily and 30-minute candles, US economic calendar with consensus, company logos." : "Set LSE_API_KEY to enable."),
+    view("yahoo", "Yahoo Finance chart (unofficial)", ["prices"], free && !c.lseKey, free, c.lseKey ? "Fallback only; London Strategic Edge supplies prices." : "Free delayed daily and 30-minute bars; no SLA; research display only."),
     view("bls", "BLS public API v1", ["macro_observations"], free, free, "Official CPI, payrolls, unemployment; no consensus; small daily quota (cached 12h)."),
-    view("nasdaqtrader", "Nasdaq symbol directory", ["symbol_directory"], free, free, "Listed tickers and names."),
+    view("universe", "Coverage universe", ["symbol_directory"], true, true, "US-listed companies with market cap ≥ $10B (snapshot), plus major index ETFs."),
     view("sec", "SEC EDGAR", ["filings", "symbol_directory"], Boolean(c.secUa), true, c.secUa ? "Public data; fair-access User-Agent set; ≤5 req/s." : "Set SEC_USER_AGENT (name + contact email) to enable."),
     view("fred", "FRED / ALFRED", ["macro_observations", "vintages"], Boolean(c.fredKey), true, "Observations and vintages only — no survey consensus."),
     view("fmp", "Financial Modeling Prep", ["company_news", "prices"], Boolean(c.fmpKey), c.fmpDisplay, c.fmpKey && !c.fmpDisplay ? "Key present but display license not attested (FMP_DISPLAY_LICENSE=confirmed)." : "News + end-of-day prices."),

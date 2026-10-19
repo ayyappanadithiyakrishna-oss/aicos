@@ -31,5 +31,6 @@ export async function getImpactHistory(symbol: string) {
 
 export async function getSecurityIndex() {
   if (isDemo()) return (await demo.demoSecurities()).map((s) => ({ ticker: s.ticker, name: s.name, kind: s.kind }));
-  return [];
+  const [{ LIVE_PROXIES }, { UNIVERSE }] = await Promise.all([import("@/lib/live/master"), import("@/lib/live/universe")]);
+  return [...LIVE_PROXIES, ...UNIVERSE.slice(0, 120)].map((s) => ({ ticker: s.ticker, name: s.name, kind: s.kind }));
 }

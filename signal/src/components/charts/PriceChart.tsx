@@ -74,11 +74,11 @@ export function PriceChart({
     const chart = createChart(el.current, {
       autoSize: true,
       height,
-      layout: { background: { color: "transparent" }, textColor: ink3, fontFamily: "var(--ff-mono), ui-monospace, monospace", fontSize: 11, attributionLogo: false },
-      grid: { vertLines: { color: line }, horzLines: { color: line } },
-      rightPriceScale: { borderColor: line },
+      layout: { background: { color: "transparent" }, textColor: ink3, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, system-ui, sans-serif", fontSize: 11, attributionLogo: false },
+      grid: { vertLines: { visible: false }, horzLines: { color: line } },
+      rightPriceScale: { borderVisible: false },
       timeScale: {
-        borderColor: line,
+        borderVisible: false,
         timeVisible: view === "intraday",
         secondsVisible: false,
         // Day boundaries show the date; intraday ticks show exchange time.
@@ -127,7 +127,7 @@ export function PriceChart({
   return (
     <figure className="m-0">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <div role="radiogroup" aria-label="Chart resolution" className="inline-flex rounded-md border border-line bg-surface-2 p-0.5">
+        <div role="radiogroup" aria-label="Chart resolution" className="inline-flex rounded-full bg-surface-3 p-0.5">
           {(["intraday", "daily"] as const).map((v) => (
             <button
               key={v}
@@ -136,7 +136,7 @@ export function PriceChart({
               aria-checked={view === v}
               disabled={v === "intraday" ? !intraday.length : !daily.length}
               onClick={() => setView(v)}
-              className={clsx("h-6 cursor-pointer rounded-[4px] px-2 font-mono text-2xs disabled:cursor-not-allowed disabled:opacity-40", view === v ? "bg-surface-3 text-ink" : "text-ink-3 hover:text-ink-2")}
+              className={clsx("h-6 cursor-pointer rounded-full px-3 text-2xs font-medium disabled:cursor-not-allowed disabled:opacity-40", view === v ? "bg-surface text-ink shadow-[0_1px_3px_rgb(0_0_0/0.12)]" : "text-ink-2 hover:text-ink")}
             >
               {v === "intraday" ? "30-min · 10 sessions" : "Daily · 1 year"}
             </button>

@@ -2,11 +2,12 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
-// No third-party origins: fonts are self-hosted by next/font, charts render locally, and the browser
-// never talks to market-data vendors directly (all provider calls are server-side).
+// Fonts are self-hosted and provider calls are server-side. The one third-party origin is the
+// TradingView chart widget (its loader script and its iframe).
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://s3.tradingview.com${isDev ? " 'unsafe-eval'" : ""}`,
+  "frame-src https://www.tradingview-widget.com https://s.tradingview.com https://www.tradingview.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",

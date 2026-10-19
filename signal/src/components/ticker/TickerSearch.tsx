@@ -15,7 +15,7 @@ export function TickerSearch() {
         e.preventDefault();
         const t = v.trim().toUpperCase();
         if (!/^[A-Z][A-Z0-9.]{0,9}$/.test(t)) {
-          setErr("Enter a ticker symbol such as HLCN.");
+          setErr("Enter a ticker symbol such as AAPL.");
           return;
         }
         setErr(null);

@@ -59,7 +59,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
         {loading ? <span className="text-2xs text-ink-3">Searching…</span> : null}
       </div>
       <Command.List className="max-h-[min(60vh,420px)] overflow-y-auto p-1.5">
-        <Command.Empty className="px-3 py-6 text-center text-sm text-ink-2">No matches. Try a ticker like HLCN or a phrase like “inflation”.</Command.Empty>
+        <Command.Empty className="px-3 py-6 text-center text-sm text-ink-2">No matches. Try a ticker like AAPL or a phrase like “inflation”.</Command.Empty>
         {hits.length ? (
           <Command.Group heading="Results" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-2xs [&_[cmdk-group-heading]]:text-ink-3">
             {hits.map((h) => (

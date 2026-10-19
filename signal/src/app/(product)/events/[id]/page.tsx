@@ -9,7 +9,8 @@ import { EVENT_TYPE_LABEL } from "@/lib/domain/types";
 import { Chip, DemoChip, Panel, SectionTitle } from "@/components/ui/primitives";
 import { ExposureTable } from "@/components/impact/ExposureTable";
 import { ImpactMap } from "@/components/graphs/ImpactMap";
-import { PriceChart } from "@/components/charts/PriceChart";
+import { TickerChart } from "@/components/charts/TickerChart";
+import { tradingViewSymbol } from "@/lib/tradingview";
 import { Monogram } from "@/components/ui/SecurityMark";
 
 export const revalidate = 60;
@@ -164,7 +165,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
               <SectionTitle>
                 Price around the event · <span className="font-mono">{primary.ticker}</span>
               </SectionTitle>
-              <PriceChart daily={ticker.daily} intraday={ticker.intraday} markers={[{ at: e.firstPublishedAt, label: "Event", severity: "high" }]} sourceLabel={`${ticker.quote.source}${mode.mode === "demo" ? " (synthetic)" : ""}`} height={240} />
+              <TickerChart tvSymbol={mode.mode === "live" && !ticker.security.isSynthetic ? tradingViewSymbol(ticker.security.ticker, ticker.security.exchange) : null} daily={ticker.daily} intraday={ticker.intraday} markers={[{ at: e.firstPublishedAt, label: "Event", severity: "high" }]} sourceLabel={`${ticker.quote.source}${mode.mode === "demo" ? " (synthetic)" : ""}`} height={320} />
             </Panel>
           ) : null}
 

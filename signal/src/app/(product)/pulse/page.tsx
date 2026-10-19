@@ -4,6 +4,8 @@ import { getPulse } from "@/lib/data/service";
 import { num, signedPct, timeET } from "@/lib/format";
 import { EmptyState, PageHeader, Panel, Pct, SectionTitle, Stat } from "@/components/ui/primitives";
 import { PulseLine } from "@/components/charts/PulseLine";
+import { TradingViewChart } from "@/components/charts/TradingViewChart";
+import { tradingViewSymbol } from "@/lib/tradingview";
 
 export const metadata: Metadata = { title: "Market Pulse" };
 export const revalidate = 60;
@@ -29,7 +31,9 @@ export default async function PulsePage() {
               </div>
             </div>
             <div className="mt-4">
-              {b.intraday.length ? (
+              {p.mode.mode === "live" ? (
+                <TradingViewChart symbol={tradingViewSymbol(b.ticker)} height={300} interval="5" range="1D" />
+              ) : b.intraday.length ? (
                 <PulseLine bars={b.intraday} prevClose={b.prevClose} markers={p.drivers.map((d) => ({ at: d.at, label: d.title }))} />
               ) : (
                 <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-line-2 text-sm text-ink-3">No intraday entitlement — session path unavailable.</div>
